@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#08090f">
+
+  <title>NexA AI - WBJEE, JENPAS UG, ANM/GNM Study Tutor</title>
+  <meta name="description" content="NexA AI by NexZen Institute. The ultimate AI study tutor for West Bengal students. Ace WBJEE, JENPAS UG, ANM GNM, WBP, KP, SSC, and Board Exams with instant answers and quizzes.">
+  <meta name="keywords" content="NexA AI, NexZen Institute, WBJEE preparation, JENPAS UG preparation, ANM GNM nursing, WBP exam, KP police exam, SSC preparation, West Bengal Board Exams, Bengali AI Tutor, AI for students, MOCK test">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ai.nexzen.live/">
+
+  <meta property="og:title" content="NexA AI - Free AI Study Tutor for Bengal Students">
+  <meta property="og:description" content="Ask anything and get instant AI answers for WBJEE, JENPAS, ANM/GNM, and SSC exams.">
+  <meta property="og:image" content="https://ai.nexzen.live/logo.png?v=2">
+  <meta property="og:url" content="https://ai.nexzen.live/">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="/logo-icon.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "NexA AI",
+    "url": "https://ai.nexzen.live/",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    },
+    "description": "AI Study Tutor for West Bengal students. Ace WBJEE, JENPAS UG, ANM GNM, WBP with instant answers.",
+    "inLanguage": ["en", "bn"]
+  }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CDN Libraries -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+  <link rel="stylesheet" href="/nexa-main.css?v=43">
+</head>
+<body>
+
+  <!-- SPLASH SCREEN -->
+  <!-- -- SEO CONTENT (Hidden from UI, visible to Googlebot & Screenreaders) -- -->
+  <div class="sr-only">
+    <h1>NexA AI - WBJEE, JENPAS UG, ANM GNM, SSC & KP Police Exam Preparation Tutor</h1>
+    <p>Practice mock tests, adaptive quizzes, and ask questions in Bengali and English for WBJEE, JENPAS UG, WBP, KP Police, SSC, and West Bengal Board exams. Get instant AI-generated answers and study notes from NexZen Institute.</p>
+  </div>
+
+  <div id="splashScreen" class="splash">
+    <div class="splash-orb splash-orb-1"></div>
+    <div class="splash-orb splash-orb-2"></div>
+    <div class="splash-logo">
+      <img src="/logo.png?v=2" alt="NexA AI" onerror="this.src='/icon-512.png'">
+      <div class="splash-glow"></div>
+    </div>
+    <div class="splash-brand">NexA <span>AI</span></div>
+    <div class="splash-sub">by NexZen Institute</div>
+    <div class="splash-dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" role="alert" aria-live="polite"></div>
+
+  <!-- MAIN APP SHELL -->
+  <div class="app" id="appShell">
+
+    <!-- BG Orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- HEADER -->
+    <header class="app-header" id="appHeader">
+      <div class="header-left">
+        <div class="header-logo">
+          <img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'">
+        </div>
+        <div class="header-titles">
+          <h1 class="header-brand">NexA <span>AI</span></h1>
+          <p class="header-sub">by NexZen Institute</p>
+        </div>
+      </div>
+
+
+
+      <div class="header-right">
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button class="icon-btn" id="newChatBtn" aria-label="New Chat" title="New Chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="profile-btn" id="profileBtn" aria-label="Open profile">
+          <div class="avatar" id="avatarEl">U</div>
+        </button>
+      </div>
+    </header>
+
+    <!-- Announcement Banner (populated by JS from admin panel) -->
+    <div id="headerAnnouncement"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- Chat Area -->
+      <div class="chat-area" id="chatArea" role="log" aria-live="polite" aria-label="Conversation"></div>
+
+      <!-- -- BOTTOM WRAP (sticky to visible viewport bottom) -- -->
+      <div class="input-footer-wrap">
+
+        <!-- Prominent Sticky Mock Quiz Banner -->
+        <div class="prominent-quiz-banner">
+          <button class="prominent-quiz-btn" id="quizPillBtn" title="Start Official Mock Quiz">
+            <span class="pq-icon" id="pqIcon">QUIZ</span>
+            <span class="pq-text" id="pqText">Free ANM/GNM Mock Quiz</span>
+            <span class="pq-arrow">-&gt;</span>
+          </button>
+        </div>
+
+        <!-- -- INPUT ISLAND -- -->
+        <div class="input-island" id="inputIsland">
+
+          <!-- Image Preview Strip -->
+          <div class="image-preview-strip" id="imagePreview" style="display:none"></div>
+
+          <!-- Text Row -->
+          <div class="input-row">
+            <div class="input-wrap">
+              <textarea
+                id="questionInput"
+                class="question-input"
+                placeholder="Ask NexA..."
+                rows="1"
+                maxlength="4000"
+                autocomplete="off"
+                spellcheck="true"
+                aria-label="Ask a question"
+              ></textarea>
+              <div class="char-count" id="charCount"></div>
+            </div>
+
+            <div class="input-actions">
+              <!-- Attach image -->
+              <label class="icon-btn attach-btn" for="imgInput" title="Attach image" aria-label="Attach image">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </label>
+              <input type="file" id="imgInput" accept="image/*,application/pdf" style="display:none" multiple>
+
+              <!-- Voice -->
+              <button class="icon-btn voice-btn" id="voiceBtn" aria-label="Voice input" title="Voice input">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+
+              <!-- Generic Quiz Mode -->
+              <button class="icon-btn quiz-trigger-btn" id="quizBtn" aria-label="Custom Quiz" title="Create a quiz on any topic">QZ</button>
+
+              <!-- Send (visible when not streaming) -->
+              <button class="send-btn" id="sendBtn" aria-label="Send message" title="Send">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+
+              <!-- Stop Generating (visible ONLY when streaming, replaces send) -->
+              <button class="stop-inline-btn hidden" id="stopGeneratingBtn" aria-label="Stop generating" title="Stop">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end input-footer-wrap -->
+
+    </main>
+
+    <!-- SCROLL TO BOTTOM FAB -->
+    <button class="scroll-fab hidden" id="scrollFab" aria-label="Scroll to bottom">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
+    <!-- PROFILE DRAWER -->
+    <div class="profile-drawer-overlay hidden" id="drawerOverlay"></div>
+    <aside class="profile-drawer hidden" id="profileDrawer" aria-label="Profile panel">
+      <div class="drawer-header">
+        <div class="drawer-avatar" id="drawerAvatarEl">U</div>
+        <div class="drawer-info">
+          <div class="drawer-name" id="drawerName">User</div>
+          <div class="drawer-email" id="drawerEmail"></div>
+          <div class="drawer-type-badge" id="drawerTypeBadge">Free</div>
+        </div>
+        <button class="icon-btn drawer-close-btn" id="drawerCloseBtn" aria-label="Close profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <!-- Streak Banner -->
+      <div class="streak-banner" id="streakBanner">
+        <span class="streak-fire">STREAK</span>
+        <span id="streakCount">0</span>-day streak
+        <span class="streak-best" id="streakBest"></span>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Usage -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Today's Usage</div>
+          <div class="usage-bar-wrap">
+            <div class="usage-bar"><div class="usage-bar-fill" id="usageBarFill"></div></div>
+            <div class="usage-label"><span id="usageUsed">0</span> / <span id="usageMax">60</span> questions</div>
+          </div>
+        </div>
+
+        <!-- Referral -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Your Referral Code</div>
+          <div class="ref-row">
+            <code class="ref-code" id="refCodeDisplay">NX-????</code>
+            <button class="ref-copy-btn" id="refCopyBtn" title="Copy referral code">Copy</button>
+          </div>
+          <div class="ref-hint">Share this to earn bonus questions!</div>
+        </div>
+
+        <!-- Saved Bookmarks -->
+        <div class="drawer-section" id="bookmarksSection">
+          <div class="drawer-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>My Bookmarks</span>
+            <button class="ref-copy-btn" id="clearBookmarksBtn" style="font-size:11px;padding:4px 10px;">Clear All</button>
+          </div>
+          <div id="bookmarksList"><div class="bookmark-empty">No saved answers yet. Tap the bookmark icon on any NexA reply to save it.</div></div>
+        </div>
+
+        <!-- Settings -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Settings</div>
+          <div class="settings-list">
+            <label class="setting-row" for="themeToggleDrawer">
+              <span>Dark Mode</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="themeToggleDrawer" checked>
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+            <button class="setting-row setting-btn" id="leaderboardBtn">
+              <span>Top Scorers Leaderboard</span>
+              <span class="setting-icon">-&gt;</span>
+            </button>
+            <button class="setting-row setting-btn" id="clearCacheBtn">
+              <span>Clear Cache</span>
+              <span class="setting-icon">CLEAR</span>
+            </button>
+            <button class="setting-row setting-btn" onclick="if(window.changeExam) window.changeExam()">
+              <span>Change Target Exam</span>
+              <span class="setting-icon">-&gt;</span>
+            </button>
+            <button class="setting-row setting-btn" id="reportProblemBtn">
+              <span>Report a Problem</span>
+              <span class="setting-icon">REPORT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Link (visible only if admin) -->
+        <div class="drawer-section" id="adminSection" style="display:none">
+          <a href="/admin" class="admin-link-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Admin Dashboard
+          </a>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button class="logout-btn" id="drawerLogoutBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- QUIZ MODAL -->
+    <div class="modal-overlay hidden" id="quizOverlay"></div>
+    <div class="quiz-setup-card hidden" id="quizSetupCard">
+      <div class="quiz-setup-header">
+        <h2>Quiz Mode</h2>
+        <button class="icon-btn" id="quizCloseBtn" aria-label="Close quiz">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="quiz-setup-body">
+        <div class="quiz-field">
+          <label>Topic</label>
+          <input type="text" id="quizTopicInput" placeholder="e.g. Cell Biology, Wave Optics, Indian History..." autocomplete="off">
+        </div>
+        <div class="quiz-field">
+          <label>Number of Questions</label>
+          <div class="quiz-count-row">
+            <button class="quiz-count-btn" data-val="5">5</button>
+            <button class="quiz-count-btn quiz-count-btn--active" data-val="10">10</button>
+            <button class="quiz-count-btn" data-val="15">15</button>
+            <button class="quiz-count-btn" data-val="20">20</button>
+          </div>
+        </div>
+        <div class="quiz-field">
+          <label>Difficulty</label>
+          <div class="quiz-diff-row">
+            <button class="quiz-diff-btn" data-val="easy">Easy</button>
+            <button class="quiz-diff-btn quiz-diff-btn--active" data-val="medium">Medium</button>
+            <button class="quiz-diff-btn" data-val="hard">Hard</button>
+          </div>
+        </div>
+      </div>
+      <button class="start-quiz-btn" id="startQuizBtn">Generate Quiz</button>
+    </div>
+
+    <!-- REPORT PROBLEM MODAL -->
+    <div class="modal-overlay hidden" id="reportOverlay"></div>
+    <div class="report-card hidden" id="reportCard">
+      <div class="quiz-setup-header">
+        <h2>Report a Problem ??</h2>
+        <button class="icon-btn" id="reportCloseBtn" aria-label="Close report">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="quiz-setup-body">
+        <div class="quiz-field">
+          <label>Describe the issue</label>
+          <textarea id="reportText" rows="4" placeholder="What went wrong? Please be specific..."></textarea>
+        </div>
+      </div>
+      <button class="start-quiz-btn" id="submitReportBtn">Submit Report</button>
+    </div>
+
+    <!-- Hidden utility elements required by app.js -->
+    <div style="display:none" aria-hidden="true">
+      <div id="refCodeDisplay_hidden"></div>
+      <input type="file" id="pdfInput" accept="application/pdf">
+    </div>
+
+  </div><!-- /.app -->
+
+  <!-- CDN Scripts (loaded before app.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- App Logic -->
+  <script src="/nexa-app.js?v=46"></script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  </script>
+
+</body>
+</html>
+

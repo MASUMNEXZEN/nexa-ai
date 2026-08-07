@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Detect in-app browsers (Telegram, Instagram, Facebook etc.) and prompt to open in Chrome -->
+  <script>
+    (function() {
+      var ua = navigator.userAgent || '';
+      // Detect: Telegram, Instagram, Facebook, Line, Snapchat, and generic Android WebView
+      var isInApp = /Telegram|TelegramBot|Instagram|FBAN|FBAV|Line\/|Snapchat|; wv\)/i.test(ua);
+      // Don't trigger if it's a standalone PWA or desktop
+      var isDesktop = !/Android|iPhone|iPad|iPod/i.test(ua);
+      var isPWA = window.matchMedia('(display-mode: standalone)').matches;
+      if (!isInApp || isDesktop || isPWA) return;
+      
+      var url = window.location.href;
+      // Android: intent to open directly in Chrome
+      var intentUrl = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+      // iOS: can't force Chrome, but show copy option
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
+      
+      document.addEventListener('DOMContentLoaded', function() {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#080a10;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:32px;text-align:center;font-family:system-ui,sans-serif;';
+        overlay.innerHTML = '<img src="/logo.png?v=2" style="width:64px;height:64px;border-radius:14px;margin-bottom:20px;" onerror="this.style.display=\'none\'">'
+          + '<h2 style="color:#dce1f0;font-size:22px;margin:0 0 8px;">Open in Browser</h2>'
+          + '<p style="color:#8891aa;font-size:14px;line-height:1.6;max-width:320px;margin:0 0 24px;">For the best experience and Google Sign-In, please open this in your browser.</p>'
+          + (isIOS
+              ? '<button id="copyBtn" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#e62335,#ff3d50);color:#fff;font-size:15px;font-weight:600;border:none;border-radius:14px;cursor:pointer;margin-bottom:12px;box-shadow:0 4px 20px rgba(230,35,53,0.3);">Copy Link & Open Safari</button>'
+              : '<a href="' + intentUrl + '" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#e62335,#ff3d50);color:#fff;font-size:15px;font-weight:600;border-radius:14px;text-decoration:none;margin-bottom:12px;box-shadow:0 4px 20px rgba(230,35,53,0.3);">Open in Chrome</a>')
+          + '<button onclick="navigator.clipboard.writeText(\'' + url + '\');this.textContent=\'✓ Link Copied!\'" style="background:none;border:1px solid rgba(255,255,255,0.12);color:#8891aa;font-size:13px;padding:10px 24px;border-radius:12px;cursor:pointer;">📋 Copy Link</button>'
+          + '<p style="color:#454e68;font-size:11px;margin-top:20px;">Paste in Chrome or Safari for Google Sign-In</p>';
+        document.body.appendChild(overlay);
+        
+        // iOS copy button
+        var copyBtn = document.getElementById('copyBtn');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(url);
+            copyBtn.textContent = '✓ Copied! Now open Safari';
+            copyBtn.style.background = '#22c55e';
+          });
+        }
+      });
+    })();
+  </script>
+  <!-- SEO Meta Tags -->
+  <title>Sign In to NexA AI – Free AI Study Assistant for WBJEE, JENPAS & Board Exams | NexZen Institute</title>
+  <meta name="description" content="Sign in or create a free account on NexA AI by NexZen Institute. Access AI-powered exam preparation for WBJEE 2025, JENPAS UG, ANM GNM, WBP, SSC & board exams in English and Bengali.">
+  <meta name="keywords" content="NexA login, NexZen Institute sign up, free AI tutor login India, WBJEE AI preparation signup, JENPAS AI login, ANM GNM AI account, AI study assistant account West Bengal">
+  <meta name="author" content="NexZen Institute, Kolkata">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ai.nexzen.live/login" />
+
+  <!-- Open Graph for Social Sharing -->
+  <meta property="og:title" content="Sign In to NexA AI – Free AI Study Assistant by NexZen Institute">
+  <meta property="og:description" content="Join NexA AI free — the AI-powered study assistant for WBJEE, JENPAS, ANM GNM & board exams by NexZen Institute, Kolkata.">
+  <meta property="og:image" content="https://ai.nexzen.live/logo.png?v=2">
+  <meta property="og:url" content="https://ai.nexzen.live/login">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NexA AI by NexZen Institute">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sign In to NexA AI – Free AI Study Assistant">
+  <meta name="twitter:description" content="Free AI-powered study assistant for WBJEE, JENPAS, ANM GNM & board exams by NexZen Institute.">
+  <meta name="twitter:image" content="https://ai.nexzen.live/logo.png?v=2">
+
+  <!-- JSON-LD for Login Page -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Sign In – NexA AI",
+    "url": "https://ai.nexzen.live/login",
+    "description": "Sign in or register for NexA AI, the free AI-powered study assistant by NexZen Institute for WBJEE, JENPAS, ANM GNM and board exam preparation.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "NexA AI",
+      "url": "https://ai.nexzen.live/",
+      "publisher": {
+        "@type": "Organization",
+        "name": "NexZen Institute",
+        "url": "https://nexzen.live",
+        "logo": "https://ai.nexzen.live/logo.png?v=2"
+      }
+    }
+  }
+  </script>
+
+  <link rel="icon" href="/logo-icon.png">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:     #e62335;
+      --red2:    #ff3d50;
+      --bg:      #080a10;
+      --surf:    rgba(13,15,24,0.82);
+      --border:  rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --text:    #dce1f0;
+      --text2:   #6b7592;
+      --sans:    'Outfit', sans-serif;
+      --mono:    'JetBrains Mono', monospace;
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Background canvas ── */
+    .bg-canvas {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55;
+    }
+    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(230,35,53,0.4), transparent 70%); top: -150px; right: -100px; animation: o1 20s ease-in-out infinite; }
+    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(80,40,160,0.35), transparent 70%); bottom: -120px; left: -80px; animation: o2 25s ease-in-out infinite; }
+    .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(230,35,53,0.12), transparent 70%); top: 50%; left: 38%; animation: o3 18s ease-in-out infinite; }
+    @keyframes o1 { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(-60px,80px)scale(1.1)} }
+    @keyframes o2 { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(70px,-60px)scale(1.12)} }
+    @keyframes o3 { 0%,100%{transform:translate(-50%,-50%)scale(1)} 50%{transform:translate(calc(-50% + 40px),calc(-50% - 40px))scale(1.2)} }
+
+    /* ── Layout ── */
+    body {
+      animation: fadeInPage 0.3s ease-out forwards;
+    }
+    body.page-exit {
+      opacity: 0 !important;
+      transition: opacity 0.2s ease-out !important;
+    }
+    @keyframes fadeInPage {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .layout {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── LEFT PANEL (branding) ── */
+    .left-panel {
+      flex: 1;
+      padding: 60px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(8,10,16,0.3);
+      border-right: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 56px;
+    }
+    .brand-logo {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: white; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 30px rgba(230,35,53,0.35);
+      overflow: hidden;
+    }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+    .brand-name { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+    .brand-name span { color: var(--red); }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(230,35,53,0.1); border: 1px solid rgba(230,35,53,0.2);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 12px; font-weight: 600; color: var(--red2);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .hero-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-title {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      line-height: 1.1;
+      color: white;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(120deg, var(--red) 0%, #ff8a96 50%, var(--red2) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 380px;
+      margin-bottom: 48px;
+    }
+
+    .feature-list { display: flex; flex-direction: column; gap: 14px; }
+    .feature-item {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px; color: var(--text2);
+    }
+    .feature-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    /* ── RIGHT PANEL (form) ── */
+    .right-panel {
+      width: 460px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 40px;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 380px;
+      animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    .form-title {
+      font-size: 24px; font-weight: 800; color: white;
+      letter-spacing: -0.5px; margin-bottom: 6px;
+    }
+    .form-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+
+    /* Google button wrapper */
+    .google-wrap {
+      display: flex; justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      color: rgba(107,117,146,0.9); font-size: 11px; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 22px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.22);
+    }
+
+    /* Inputs */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: rgba(220,225,240,0.7); margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .field input {
+      width: 100%; padding: 13px 16px; border-radius: 13px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: white; font-family: var(--sans); font-size: 15px;
+      transition: all 0.2s; outline: none;
+    }
+    .field input:focus {
+      border-color: rgba(230,35,53,0.7);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 4px rgba(230,35,53,0.12);
+    }
+    .field input::placeholder { color: rgba(107,117,146,0.75); }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%; padding: 14px;
+      border: none; border-radius: 13px;
+      background: linear-gradient(135deg, #ff4d5f, var(--red) 60%);
+      color: white; font-family: var(--sans); font-weight: 700; font-size: 15px;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 6px 24px rgba(230,35,53,0.32);
+      margin-top: 8px; letter-spacing: 0.2px;
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(230,35,53,0.42); }
+    .btn-primary:active:not(:disabled) { transform: translateY(1px); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .form-toggle {
+      text-align: center; margin-top: 18px;
+      font-size: 13px; color: var(--text2);
+    }
+    .form-toggle a {
+      color: var(--red2); font-weight: 600;
+      text-decoration: none; cursor: pointer;
+    }
+    .form-toggle a:hover { color: white; }
+
+    /* ── OTP View ── */
+    .otp-label {
+      text-align: center; font-size: 14px; color: var(--text2);
+      margin-bottom: 24px; line-height: 1.6;
+    }
+    .otp-label strong { color: white; display: block; font-size: 15px; margin-top: 4px; }
+
+    .otp-boxes {
+      display: flex; gap: 10px; justify-content: center; margin-bottom: 24px;
+    }
+    .otp-box {
+      width: 52px; height: 60px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border2);
+      color: white; font-family: var(--mono);
+      font-size: 24px; font-weight: 700;
+      text-align: center; outline: none;
+      transition: all 0.2s;
+      caret-color: var(--red);
+    }
+    .otp-box:focus {
+      border-color: var(--red); background: rgba(230,35,53,0.07);
+      box-shadow: 0 0 0 3px rgba(230,35,53,0.12);
+    }
+    .otp-box.filled { border-color: rgba(230,35,53,0.5); }
+
+    .resend-row {
+      text-align: center; font-size: 13px; color: var(--text2);
+      margin-top: 16px;
+    }
+    .resend-row a { color: var(--red2); font-weight: 600; cursor: pointer; }
+    .resend-row a:hover { color: white; }
+    #resendTimer { font-family: var(--mono); font-size: 12px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      padding: 13px 22px; border-radius: 12px;
+      font-weight: 600; font-size: 14px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: all 0.3s; white-space: nowrap;
+      background: #e62335; color: white;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.success { background: #10b981; }
+    #toast.info { background: #6366f1; }
+
+    /* View transitions */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+
+    /* ── Mobile logo bar (hidden on desktop) ── */
+    .mobile-logo {
+      display: none;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      /* Allow scroll when mobile keyboard opens */
+      html, body { height: auto; overflow: auto; }
+      body { display: block; min-height: 100vh; }
+      .bg-canvas { position: fixed; }
+
+      .left-panel { display: none; }
+
+      /* Show mobile logo */
+      .mobile-logo {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 28px;
+      }
+      .ml-icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: white; display: flex; align-items: center; justify-content: center;
+        overflow: hidden; flex-shrink: 0;
+        box-shadow: 0 0 20px rgba(230,35,53,0.3);
+      }
+      .ml-icon img { width: 100%; height: 100%; object-fit: contain; padding: 4px; box-sizing: border-box; }
+      .ml-name { font-size: 18px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+      .ml-name span { color: var(--red); }
+      .ml-sub { font-size: 11px; color: var(--text2); margin-top: 1px; letter-spacing: 0.3px; }
+
+      .right-panel {
+        width: 100%; min-height: 100vh;
+        padding: 0;
+        display: flex; align-items: flex-start; justify-content: center;
+      }
+
+      .form-box {
+        width: 100%; max-width: 100%;
+        padding: 28px 22px 40px;
+        padding-bottom: calc(40px + env(safe-area-inset-bottom));
+      }
+
+      /* Compact mobile logo bar at top */
+      .form-box::before {
+        content: '';
+        display: block; height: 1px; /* placeholder — real logo done via .mobile-logo below */
+      }
+
+      .form-title { font-size: 22px; }
+      .form-sub   { font-size: 13px; margin-bottom: 22px; }
+
+      .google-wrap { margin-bottom: 18px; }
+
+      .field { margin-bottom: 12px; }
+      .field input { padding: 12px 14px; font-size: 15px; border-radius: 12px; }
+      .btn-primary { padding: 14px; font-size: 15px; border-radius: 12px; }
+      .form-toggle { margin-top: 16px; }
+
+      /* OTP boxes — squeeze to fit any screen */
+      .otp-boxes { gap: 7px; }
+      .otp-box {
+        width: calc((100% - 42px) / 6); /* 6 boxes + 5 gaps × 7px + 2×22px padding */
+        max-width: 48px;
+        height: 52px;
+        font-size: 20px;
+        border-radius: 12px;
+      }
+
+      .otp-label { font-size: 13px; margin-bottom: 18px; }
+      .otp-label strong { font-size: 14px; }
+      .resend-row { font-size: 12px; margin-top: 14px; }
+
+      /* Toast full-width on mobile */
+      #toast {
+        left: 16px; right: 16px;
+        transform: translateY(-20px);
+        white-space: normal; text-align: center;
+      }
+      #toast.show { transform: translateY(0); }
+    }
+
+    /* Very small screens */
+    @media (max-width: 360px) {
+      .form-box { padding: 24px 16px 36px; }
+      .otp-box { height: 46px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div id="toast"></div>
+
+  <div class="layout">
+
+    <!-- ── LEFT BRANDING PANEL ── -->
+    <div class="left-panel">
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="logo.png?v=2" alt="NexA" onerror="this.src='icon-512.png'">
+        </div>
+        <div class="brand-name">Nex<span>A</span></div>
+      </div>
+
+      <div class="hero-tag">
+        <span class="hero-dot"></span> AI-Powered Learning
+      </div>
+
+      <h1 class="hero-title">
+        Your personal<br><em>AI study tutor</em>
+      </h1>
+
+      <p class="hero-sub">
+        Ask anything — from science to history. Get instant, accurate answers in English and Bengali.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">🧠</div>
+          <span>Built by NexZen Institute</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🗣️</div>
+          <span>Voice input in Bengali &amp; English</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <span>Real-time streaming answers</span>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔒</div>
+          <span>Secure with Google or Email login</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT FORM PANEL ── -->
+    <div class="right-panel">
+      <div class="form-box">
+
+        <!-- Mobile-only compact logo bar -->
+        <div class="mobile-logo">
+          <div class="ml-icon"><img src="logo.png?v=2" alt="" onerror="this.src='icon-512.png'"></div>
+          <div>
+            <div class="ml-name">Nex<span>A</span> AI</div>
+            <div class="ml-sub">by NexZen Institute</div>
+          </div>
+        </div>
+
+        <!-- Sign In -->
+        <div id="loginView" class="view active">
+          <div class="form-title">Welcome back</div>
+          <div class="form-sub">Sign in to continue to NexA AI</div>
+
+          <div class="google-wrap">
+            <div id="g_id_onload"
+              data-client_id="600840176497-0pfnjn1erjikics53u1d113d4482dd66.apps.googleusercontent.com"
+              data-callback="handleGoogleCredential"
+              data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+              data-type="standard" data-shape="pill" data-theme="outline"
+              data-text="signin_with" data-size="large"
+              data-logo_alignment="left" data-width="320">
+            </div>
+          </div>
+
+          <div class="divider">or with email</div>
+
+          <form id="loginForm">
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
+          </form>
+          <div style="text-align:center;margin-top:12px;">
+            <a onclick="toggleView('forgotView')" style="font-size:13px;color:rgba(200,205,225,0.75);cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(200,205,225,0.75)'">Forgot password?</a>
+          </div>
+          <div class="form-toggle">
+            New here? <a onclick="toggleView('signupView')">Create account</a>
+          </div>
+        </div>
+
+        <!-- Forgot Password -->
+        <div id="forgotView" class="view">
+          <div class="form-title">Reset password</div>
+          <div class="form-sub">Enter your email and we'll send a reset code</div>
+          <form id="forgotForm">
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="forgotEmail" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            <button type="submit" class="btn-primary" id="forgotBtn">Send Reset Code</button>
+          </form>
+          <div class="form-toggle" style="margin-top:12px">
+            <a onclick="toggleView('loginView')" style="color:var(--text2)">← Back to Sign In</a>
+          </div>
+        </div>
+
+        <!-- Reset Password (enter OTP + new password) -->
+        <div id="resetView" class="view">
+          <div class="form-title">Set new password</div>
+          <div class="otp-label">Enter the 6-digit code sent to <strong id="resetEmailLabel"></strong></div>
+          <div class="otp-boxes">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp0" autocomplete="one-time-code">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp1">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp2">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp3">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp4">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box reset-otp" id="rotp5">
+          </div>
+          <div class="field" style="margin-top:16px;">
+            <label>New Password <span style="color:var(--text2);font-weight:400;font-size:11px">(min 6 chars)</span></label>
+            <input type="password" id="resetNewPassword" placeholder="Create a new password" required minlength="6">
+          </div>
+          <button class="btn-primary" id="resetBtn" onclick="resetPassword()">Reset Password</button>
+          <div class="form-toggle" style="margin-top:12px">
+            <a onclick="toggleView('loginView')" style="color:var(--text2)">← Back to Sign In</a>
+          </div>
+        </div>
+
+        <!-- Sign Up -->
+        <div id="signupView" class="view">
+          <div class="form-title">Create account</div>
+          <div class="form-sub">Join NexA AI and start learning</div>
+
+          <div class="google-wrap">
+            <div class="g_id_signin"
+              data-type="standard" data-shape="pill" data-theme="outline"
+              data-text="signup_with" data-size="large"
+              data-logo_alignment="left" data-width="320">
+            </div>
+          </div>
+
+          <div class="divider">or with email</div>
+
+          <form id="signupForm">
+            <div class="field">
+              <label>Full Name</label>
+              <input type="text" id="signupName" placeholder="Your Name" required>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email">
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <div class="field" style="flex:1;">
+                  <label>Country <span style="color:var(--text2);font-weight:400;font-size:11px">(optional)</span></label>
+                  <input type="text" id="signupCountry" placeholder="e.g. India" value="India">
+                </div>
+                <div class="field" style="flex:1;">
+                  <label>State <span style="color:var(--text2);font-weight:400;font-size:11px">(optional)</span></label>
+                  <input type="text" id="signupState" placeholder="e.g. West Bengal">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <div class="field" style="flex:1;">
+                  <label>District <span style="color:var(--text2);font-weight:400;font-size:11px">(optional)</span></label>
+                  <input type="text" id="signupDistrict" placeholder="e.g. Kolkata">
+                </div>
+                <div class="field" style="flex:1;">
+                  <label>PIN Code <span style="color:var(--text2);font-weight:400;font-size:11px">(optional)</span></label>
+                  <input type="text" id="signupPin" placeholder="e.g. 700001">
+                </div>
+            </div>
+
+            <div class="field">
+              <label>Full Address <span style="color:var(--text2);font-weight:400;font-size:11px">(optional)</span></label>
+              <input type="text" id="signupAddress" placeholder="Your complete address">
+            </div>
+
+            <div class="field">
+              <label>Password <span style="color:var(--text2);font-weight:400;font-size:11px">(min 6 chars)</span></label>
+              <input type="password" id="signupPassword" placeholder="Create a strong password" required minlength="6" autocomplete="new-password" oninput="updateStrength(this.value)">
+              <div style="margin-top:6px;">
+                <div style="height:4px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;">
+                  <div id="strengthBar" style="height:100%;width:0%;border-radius:4px;transition:all 0.3s ease;"></div>
+                </div>
+                <div id="strengthLabel" style="font-size:11px;margin-top:4px;color:var(--text2);"></div>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" id="signupBtn">Send Verification Code →</button>
+            <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--text2);line-height:1.5;">
+              By signing up, you agree to our<br>
+              <a href="/terms" style="color:var(--red);text-decoration:none;">Terms of Service</a> and
+              <a href="/privacy" style="color:var(--red);text-decoration:none;">Privacy Policy</a>
+            </div>
+          </form>
+          <div class="form-toggle">
+            Already have an account? <a onclick="toggleView('loginView')">Sign in</a>
+          </div>
+        </div>
+
+        <!-- OTP Verify -->
+        <div id="otpView" class="view">
+          <div class="form-title">Enter the code</div>
+          <div class="otp-label">
+            We emailed a 6-digit code to
+            <strong id="otpEmailLabel"></strong>
+          </div>
+
+          <div class="otp-boxes">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp0" autocomplete="one-time-code">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp1">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp2">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp3">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp4">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-box" id="otp5">
+          </div>
+
+          <button class="btn-primary" id="otpBtn" onclick="verifyOtp()">Verify &amp; Create Account</button>
+
+          <div class="resend-row">
+            Didn't receive it?
+            <a id="resendLink" onclick="resendOtp()" style="display:none">Resend code</a>
+            <span id="resendTimer"></span>
+          </div>
+          <div class="form-toggle" style="margin-top:12px">
+            <a onclick="toggleView('signupView')" style="color:var(--text2)">← Back</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleView(id) {
+      document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    function showToast(msg, type = 'error') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `show ${type}`;
+      setTimeout(() => t.className = '', 4000);
+    }
+    function goToApp() {
+      document.body.classList.add('page-exit');
+      setTimeout(() => window.location.href = '/', 200);
+    }
+
+    // Password strength indicator
+    function updateStrength(pw) {
+      const bar = document.getElementById('strengthBar');
+      const label = document.getElementById('strengthLabel');
+      if (!pw) { bar.style.width = '0%'; label.textContent = ''; return; }
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      const levels = [
+        { w: '20%', c: '#ef4444', t: 'Weak' },
+        { w: '40%', c: '#f97316', t: 'Fair' },
+        { w: '60%', c: '#eab308', t: 'Fair' },
+        { w: '80%', c: '#22c55e', t: 'Good' },
+        { w: '100%', c: '#10b981', t: 'Strong' }
+      ];
+      const l = levels[Math.min(score, 4)];
+      bar.style.width = l.w; bar.style.background = l.c;
+      label.textContent = l.t; label.style.color = l.c;
+    }
+
+    // Google OAuth
+    async function handleGoogleCredential(resp) {
+      showToast('Signing in with Google…', 'info');
+      try {
+        const res = await fetch('/api/auth-google.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: resp.credential })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Google login failed.');
+        showToast('Welcome! Redirecting…', 'success');
+        setTimeout(goToApp, 800);
+      } catch (err) { showToast(err.message); }
+    }
+
+    // Sign In
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.textContent = 'Signing in…'; btn.disabled = true;
+      try {
+        const res = await fetch('/api/auth-login.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed.');
+        goToApp();
+      } catch (err) {
+        showToast(err.message);
+        btn.textContent = 'Sign In'; btn.disabled = false;
+      }
+    });
+
+    // Sign Up → Send OTP
+    let pendingEmail = '';
+    document.getElementById('signupForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('signupBtn');
+      btn.textContent = 'Sending code…'; btn.disabled = true;
+      try {
+        const email    = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+        const name     = document.getElementById('signupName').value;
+        const country  = document.getElementById('signupCountry').value;
+        const state    = document.getElementById('signupState').value;
+        const district = document.getElementById('signupDistrict').value;
+        const pin      = document.getElementById('signupPin').value;
+        const address  = document.getElementById('signupAddress').value;
+
+        const payload = { email, password, name, country, state, district, pin, address };
+
+        const res = await fetch('/api/auth-register.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed.');
+        pendingEmail = email;
+        document.getElementById('otpEmailLabel').textContent = email;
+        toggleView('otpView');
+        document.getElementById('otp0').focus();
+        startResendTimer(60);
+        showToast(data.dev_otp ? ('Local verification code: ' + data.dev_otp) : 'Code sent! Check your inbox.', 'success');
+      } catch (err) {
+        showToast(err.message);
+        btn.textContent = 'Send Verification Code →'; btn.disabled = false;
+      }
+    });
+
+    // OTP boxes
+    document.querySelectorAll('.otp-box').forEach((box, idx, all) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\D/g, '').slice(-1);
+        box.classList.toggle('filled', !!box.value);
+        if (box.value && idx < all.length - 1) all[idx + 1].focus();
+        if (idx === all.length - 1 && box.value) verifyOtp();
+      });
+      box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && idx > 0) all[idx - 1].focus();
+      });
+      box.addEventListener('paste', e => {
+        e.preventDefault();
+        const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        all.forEach((b, i) => { b.value = digits[i] || ''; b.classList.toggle('filled', !!b.value); });
+        if (digits.length === 6) verifyOtp();
+        else all[Math.min(digits.length, 5)].focus();
+      });
+    });
+
+    // Verify OTP
+    async function verifyOtp() {
+      const otp = Array.from(document.querySelectorAll('.otp-box')).map(b => b.value).join('');
+      if (otp.length < 6) { showToast('Enter all 6 digits.'); return; }
+      const btn = document.getElementById('otpBtn');
+      btn.textContent = 'Verifying…'; btn.disabled = true;
+      try {
+        const payload = { 
+            email: pendingEmail, 
+            otp: otp,
+            password: document.getElementById('signupPassword').value,
+            name: document.getElementById('signupName').value,
+            country: document.getElementById('signupCountry').value,
+            state: document.getElementById('signupState').value,
+            district: document.getElementById('signupDistrict').value,
+            pin: document.getElementById('signupPin').value,
+            address: document.getElementById('signupAddress').value
+        };
+        const res = await fetch('/api/auth-verify-otp.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Verification failed.');
+        showToast('Account created! Welcome 🎉', 'success');
+        setTimeout(goToApp, 900);
+      } catch (err) {
+        showToast(err.message);
+        document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('filled'); });
+        document.getElementById('otp0').focus();
+        btn.textContent = 'Verify & Create Account'; btn.disabled = false;
+      }
+    }
+
+    // Resend timer
+    let resendInterval;
+    function startResendTimer(sec) {
+      const link = document.getElementById('resendLink');
+      const timer = document.getElementById('resendTimer');
+      link.style.display = 'none'; timer.textContent = `Resend in ${sec}s`;
+      clearInterval(resendInterval);
+      let s = sec;
+      resendInterval = setInterval(() => {
+        s--;
+        if (s <= 0) { clearInterval(resendInterval); timer.textContent = ''; link.style.display = 'inline'; }
+        else timer.textContent = `Resend in ${s}s`;
+      }, 1000);
+    }
+
+    async function resendOtp() {
+      const passEl = document.getElementById('signupPassword');
+      showToast('Resending…', 'info');
+      try {
+        const res = await fetch('/api/auth-register.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              email: pendingEmail, 
+              password: passEl.value,
+              name: document.getElementById('signupName').value,
+              country: document.getElementById('signupCountry').value,
+              state: document.getElementById('signupState').value,
+              district: document.getElementById('signupDistrict').value,
+              pin: document.getElementById('signupPin').value,
+              address: document.getElementById('signupAddress').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed.');
+        showToast(data.dev_otp ? ('Local verification code: ' + data.dev_otp) : 'New code sent!', 'success');
+        document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('filled'); });
+        document.getElementById('otp0').focus();
+        startResendTimer(60);
+      } catch (err) { showToast(err.message); }
+    }
+
+    // ── Forgot Password ──
+    let resetEmail = '';
+
+    document.getElementById('forgotForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('forgotBtn');
+      btn.textContent = 'Sending…'; btn.disabled = true;
+      try {
+        const email = document.getElementById('forgotEmail').value;
+        const res = await fetch('/api/auth-forgot-password.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed.');
+        resetEmail = email;
+        document.getElementById('resetEmailLabel').textContent = email;
+        toggleView('resetView');
+        document.getElementById('rotp0').focus();
+        showToast('Reset code sent! Check your inbox.', 'success');
+      } catch (err) {
+        showToast(err.message);
+      }
+      btn.textContent = 'Send Reset Code'; btn.disabled = false;
+    });
+
+    // Reset OTP box auto-advance
+    document.querySelectorAll('.reset-otp').forEach((box, idx, all) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/\D/g, '').slice(-1);
+        box.classList.toggle('filled', !!box.value);
+        if (box.value && idx < all.length - 1) all[idx + 1].focus();
+      });
+      box.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !box.value && idx > 0) all[idx - 1].focus();
+      });
+      box.addEventListener('paste', e => {
+        e.preventDefault();
+        const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        all.forEach((b, i) => { b.value = digits[i] || ''; b.classList.toggle('filled', !!b.value); });
+        if (digits.length === 6) resetPassword();
+        else all[Math.min(digits.length, 5)].focus();
+      });
+    });
+
+    async function resetPassword() {
+      const otp = Array.from(document.querySelectorAll('.reset-otp')).map(b => b.value).join('');
+      if (otp.length < 6) { showToast('Enter all 6 digits.'); return; }
+      const newPw = document.getElementById('resetNewPassword').value;
+      if (newPw.length < 6) { showToast('Password must be at least 6 characters.'); return; }
+      const btn = document.getElementById('resetBtn');
+      btn.textContent = 'Resetting…'; btn.disabled = true;
+      try {
+        const res = await fetch('/api/auth-reset-password.php', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail, otp, new_password: newPw })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Reset failed.');
+        showToast('Password reset! Redirecting…', 'success');
+        setTimeout(goToApp, 900);
+      } catch (err) {
+        showToast(err.message);
+        document.querySelectorAll('.reset-otp').forEach(b => { b.value = ''; b.classList.remove('filled'); });
+        document.getElementById('rotp0').focus();
+        btn.textContent = 'Reset Password'; btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

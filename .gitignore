@@ -1,0 +1,46 @@
+# Local tooling and dependency caches
+.netlify/
+node_modules/
+vendor/
+
+# Environment variables and secret-bearing configuration
+.env
+.env.*
+!.env.example
+backend/api/fcm-key.json
+*.pem
+*.key
+
+# Runtime state and private data
+data/
+storage/
+*.sqlite
+*.sqlite-*
+*.db
+*.log
+
+# Local diagnostics and generated reports
+debug*.txt
+out.txt
+output*.txt
+parsed.txt
+streaming_output*.txt
+backend/api/trace.txt
+backend/api/gemini_raw_dump.txt
+lighthouse*.json
+
+# Local backups and scratch copies
+*.bak
+*_backup.*
+*_original.*
+tmp_*
+data_temp.json
+__pycache__/
+*.pyc
+
+
+backend/.env
+backend/data/
+
+# Recoverable quarantine; never deploy
+.quarantine/

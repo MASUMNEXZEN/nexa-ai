@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NexA AI — Admin Command Center</title>
+  <meta name="theme-color" content="#08090f">
+  <link rel="icon" href="/logo-icon.png">
+  <link rel="stylesheet" href="/admin-style.css?v=3">
+  <link rel="stylesheet" href="/admin-tabs.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div id="loadingScreen">
+    <div class="spinner"></div>
+    <div style="color:var(--text-muted);font-weight:500;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Securing Session...</div>
+  </div>
+
+  <!-- Header -->
+  <header class="admin-header glass-panel" id="authHeader" style="display:none;">
+    <div class="brand-wrap">
+      <img src="/logo.png?v=2" alt="NexA Logo" onerror="this.style.display='none'">
+      <div class="brand-text">
+        <h1>NexA <span>AI</span></h1>
+        <div class="brand-badge">Command Center</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="admin-email" id="adminEmail">Connecting...</div>
+      <button class="btn" onclick="refreshAll()">↻ Refresh</button>
+      <a href="/api/admin-export-csv.php" class="btn" target="_blank">↓ Export</a>
+      <button class="btn" onclick="logout()">Logout</button>
+      <a href="/" class="btn btn-primary">Live App →</a>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav glass-panel" id="tabNav" style="display:none;">
+    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="subscriptions" onclick="switchTab('subscriptions')">💰 Revenue</button>
+    <button class="tab-btn" data-tab="plans" onclick="switchTab('plans')">📋 Plans</button>
+    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">👥 Users</button>
+    <button class="tab-btn" data-tab="appconfig" onclick="switchTab('appconfig')">⚙️ App Config</button>
+    <button class="tab-btn" data-tab="push" onclick="switchTab('push')">📢 Push Notify</button>
+    <button class="tab-btn" data-tab="telegram" onclick="switchTab('telegram')">✈️ Telegram</button>
+  </nav>
+
+  <main id="dashboard" style="display:none;">
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: DASHBOARD                                              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content active dashboard-grid" id="tab-dashboard">
+
+      <div class="stat-card glass-panel">
+        <h3>Queries Today</h3>
+        <div><div class="stat-value" id="totalQuestions">0</div><div class="stat-sub">Total AI Queries Answered</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>Registered Users</h3>
+        <div><div class="stat-value" id="totalUsersCount">0</div><div class="stat-sub">Verified Web Accounts</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>Revenue This Month</h3>
+        <div><div class="stat-value" id="revenueMonth">₹0</div><div class="stat-sub">Subscription Payments</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>Pro + Premium Users</h3>
+        <div><div class="stat-value" id="paidUsersCount">0</div><div class="stat-sub">Paid Subscribers Active</div></div>
+      </div>
+
+      <!-- Active Users Table -->
+      <div class="glass-panel card-full" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--success)">●</span> Active Students Today
+        </h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Email</th><th>Queries</th><th>Plan</th><th>Status</th></tr></thead>
+          <tbody id="userTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:30px;">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="glass-panel card-half" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;">7-Day Volume Trend</h3>
+        <div class="chart-container"><canvas id="usageChart"></canvas></div>
+      </div>
+      <div class="glass-panel" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;">Subject Distribution</h3>
+        <div class="chart-container"><canvas id="subjectChart"></canvas></div>
+      </div>
+
+      <!-- Live Firehose -->
+      <div class="glass-panel card-half" style="padding:24px;display:flex;flex-direction:column;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">Live Firehose</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px;">Real-time stream of incoming AI prompts</p>
+        <div class="topic-list" id="recentTopicsList" style="flex:1;">
+          <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:40px;">Waiting for queries...</div>
+        </div>
+      </div>
+
+      <!-- Global Announcement -->
+      <div class="glass-panel" style="padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:600;">Global App Banner</h3>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);cursor:pointer;">
+            <input type="checkbox" id="announcementActive" style="accent-color:var(--accent);width:16px;height:16px;"> Enable
+          </label>
+        </div>
+        <textarea id="announcementText" class="input-control" placeholder="Type a message to display at the top of the chat app..."></textarea>
+        <button class="btn btn-primary" id="saveAnnouncementBtn" onclick="saveAnnouncement()" style="margin-top:12px;width:100%;justify-content:center;">Push to Live App</button>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: SUBSCRIPTIONS / REVENUE                               -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content dashboard-grid" id="tab-subscriptions" style="display:none;">
+
+      <div class="stat-card glass-panel">
+        <h3>Total Revenue</h3>
+        <div><div class="stat-value" id="revTotal">₹0</div><div class="stat-sub">All Time Payments</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>This Month</h3>
+        <div><div class="stat-value" id="revMonth">₹0</div><div class="stat-sub">Monthly Revenue</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>Pro Users</h3>
+        <div><div class="stat-value" id="proCount">0</div><div class="stat-sub">Active Pro Subscribers</div></div>
+      </div>
+      <div class="stat-card glass-panel">
+        <h3>Premium Users</h3>
+        <div><div class="stat-value" id="premiumCount">0</div><div class="stat-sub">Active Premium Subscribers</div></div>
+      </div>
+
+      <!-- Subscriber List -->
+      <div class="glass-panel card-full" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">Active Subscribers</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Status</th><th>Expires</th><th>Actions</th></tr></thead>
+          <tbody id="subscribersBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- Payment History -->
+      <div class="glass-panel card-full" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">Payment History</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Email</th><th>Plan</th><th>Amount</th><th>Status</th><th>Date</th><th>Payment ID</th></tr></thead>
+          <tbody id="paymentsBody"><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: SUBSCRIPTION PLANS                                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-plans" style="display:none;">
+      <div class="plans-grid" id="plansGrid">
+        <div style="color:var(--text-muted);text-align:center;padding:40px;">Loading plans...</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: USERS                                                  -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-users" style="display:none;">
+      <div class="glass-panel" style="padding:24px;margin-bottom:24px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div class="stat-card" style="flex:1;min-width:200px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:16px;">
+            <h3 style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Daily Limit (Free)</h3>
+            <div class="input-group" style="margin:0;padding:0;">
+              <input type="number" id="newLimitInput" class="input-control" min="1" placeholder="Set Limit">
+              <button class="btn btn-primary" onclick="updateLimit()">Save</button>
+            </div>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <input type="text" id="userSearch" class="input-control" placeholder="🔍 Search user by email..." oninput="filterUsers()">
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="padding:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">Web Account Registry</h3>
+        <div class="table-wrap" style="max-height:600px;overflow-y:auto;">
+          <table>
+            <thead style="position:sticky;top:0;background:var(--bg);z-index:2;">
+              <tr><th>Joined</th><th>Name</th><th>Email</th><th>Auth</th><th>Plan</th><th>Region</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="registeredUsersBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:40px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: APP CONFIG                                             -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-appconfig" style="display:none;">
+      <div class="config-grid">
+
+        <!-- Daily Limits -->
+        <div class="glass-panel config-section">
+          <h3 class="config-section-title">📊 Daily Question Limits</h3>
+          <div class="config-row">
+            <label>Free Users (Q/day)</label>
+            <input type="number" id="cfg_free_daily_limit" class="input-control" style="max-width:120px;">
+          </div>
+          <div class="config-row">
+            <label>Pro Users (Q/day)</label>
+            <input type="number" id="cfg_pro_daily_limit" class="input-control" style="max-width:120px;">
+          </div>
+          <div class="config-row">
+            <label>Premium Users (Q/day)</label>
+            <input type="number" id="cfg_premium_daily_limit" class="input-control" style="max-width:120px;">
+          </div>
+        </div>
+
+        <!-- Feature Flags -->
+        <div class="glass-panel config-section">
+          <h3 class="config-section-title">🎛️ Feature Flags</h3>
+          <div class="config-row">
+            <label>Voice Input</label>
+            <label class="toggle"><input type="checkbox" id="cfg_voice_enabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="config-row">
+            <label>Camera / Image</label>
+            <label class="toggle"><input type="checkbox" id="cfg_camera_enabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="config-row">
+            <label>Quiz Mode</label>
+            <label class="toggle"><input type="checkbox" id="cfg_quiz_enabled"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="config-row">
+            <label>Subscription System</label>
+            <label class="toggle"><input type="checkbox" id="cfg_subscription_enabled"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <!-- Maintenance -->
+        <div class="glass-panel config-section">
+          <h3 class="config-section-title">🔧 Maintenance Mode</h3>
+          <div class="config-row">
+            <label>Enable Maintenance</label>
+            <label class="toggle"><input type="checkbox" id="cfg_maintenance_mode"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <label>Maintenance Message</label>
+            <textarea id="cfg_maintenance_message" class="input-control" rows="3" placeholder="Message shown in app during maintenance..."></textarea>
+          </div>
+        </div>
+
+        <!-- App Version -->
+        <div class="glass-panel config-section">
+          <h3 class="config-section-title">📱 App Version Gate</h3>
+          <div class="config-row">
+            <label>Min Required Version</label>
+            <input type="text" id="cfg_app_version_required" class="input-control" style="max-width:140px;" placeholder="1.0.0">
+          </div>
+          <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <label>Update URL (Play Store)</label>
+            <input type="text" id="cfg_app_update_url" class="input-control" placeholder="https://play.google.com/...">
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="glass-panel config-section" style="grid-column:1/-1;">
+          <h3 class="config-section-title">💬 Content & Messaging</h3>
+          <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <label>Welcome Message (shown after login)</label>
+            <input type="text" id="cfg_welcome_message" class="input-control" placeholder="Welcome to NexA AI!">
+          </div>
+          <div class="config-row">
+            <label>Free Trial Days (for new users)</label>
+            <input type="number" id="cfg_free_trial_days" class="input-control" style="max-width:120px;" min="0">
+          </div>
+        </div>
+
+        <div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:12px;">
+          <button class="btn" onclick="loadAppConfig()">↻ Reset</button>
+          <button class="btn btn-primary" onclick="saveAppConfig()">💾 Save All Config</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: PUSH NOTIFICATIONS                                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-push" style="display:none;">
+      <div class="glass-panel" style="padding:32px;max-width:700px;margin:0 auto;">
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:24px;">📢 Send Push Notification</h3>
+
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">NOTIFICATION TITLE</label>
+          <input type="text" id="pushTitle" class="input-control" placeholder="NexA AI" value="NexA AI">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">MESSAGE *</label>
+          <textarea id="pushBody" class="input-control" rows="4" placeholder="📚 Time to study! Open NexA and start your prep session."></textarea>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:10px;">SEND TO</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <label class="radio-chip"><input type="radio" name="pushTarget" value="all" checked> All Users</label>
+            <label class="radio-chip"><input type="radio" name="pushTarget" value="free"> Free Users</label>
+            <label class="radio-chip"><input type="radio" name="pushTarget" value="pro"> Pro Users</label>
+            <label class="radio-chip"><input type="radio" name="pushTarget" value="premium"> Premium Users</label>
+            <label class="radio-chip"><input type="radio" name="pushTarget" value="email"> Specific Email</label>
+          </div>
+          <input type="email" id="pushEmail" class="input-control" style="margin-top:12px;display:none;" placeholder="user@example.com">
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="sendPush()">🚀 Send Push Notification</button>
+        <div id="pushResult" style="margin-top:16px;font-size:14px;text-align:center;color:var(--text-muted);"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- TAB: TELEGRAM                                               -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="tab-content" id="tab-telegram" style="display:none;">
+      <div class="glass-panel card-full" style="padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
+          <h3 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;">
+            ✈️ Telegram Subscriptions
+            <span class="badge badge-info" id="totalTelegramUsers" style="font-family:var(--font-mono)">0 TOTAL</span>
+          </h3>
+          <div style="display:flex;gap:12px;">
+            <button class="btn" onclick="openBroadcast()" style="color:var(--info);border-color:rgba(59,130,246,0.3)">Broadcast Message</button>
+            <a href="/api/admin-export-telegram-csv.php" target="_blank" class="btn">Export Data</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>User Info</th><th>Phone</th><th>Handle</th><th>Volume</th><th>Last Ping</th></tr></thead>
+          <tbody id="telegramUsersBody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="userProfileModal">
+    <div class="modal-card glass-panel">
+      <button class="modal-close" onclick="hideModal('userProfileModal')">×</button>
+      <div class="modal-header">
+        <div class="modal-header-icon" id="pmAvatar">?</div>
+        <div><div class="modal-title" id="pmName">Name</div><div class="modal-subtitle" id="pmEmail">Email</div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn" style="color:var(--success);border-color:rgba(16,185,129,0.3)" onclick="adminAction('upgrade','pro')">⬆ Set Pro</button>
+        <button class="btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="adminAction('upgrade','premium')">👑 Set Premium</button>
+        <button class="btn" onclick="adminAction('downgrade','free')">⬇ Set Free</button>
+        <button class="btn" onclick="adminAction('reset_count','')">🔄 Reset Count</button>
+        <button class="btn" onclick="adminAction('grant_bonus','')" style="color:var(--info)">+10 Bonus</button>
+        <button class="btn" style="color:var(--accent)" onclick="adminAction('ban','')">🚫 Ban</button>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field"><div class="modal-label">Plan</div><div class="modal-value badge badge-neutral" id="pmType">FREE</div></div>
+        <div class="modal-field"><div class="modal-label">Registered</div><div class="modal-value" id="pmJoined">-</div></div>
+        <div class="modal-field"><div class="modal-label">Country</div><div class="modal-value" id="pmCountry">-</div></div>
+        <div class="modal-field"><div class="modal-label">State</div><div class="modal-value" id="pmState">-</div></div>
+        <div class="modal-field full"><div class="modal-label">Address</div><div class="modal-value" id="pmAddress">-</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="broadcastModal">
+    <div class="modal-card glass-panel">
+      <button class="modal-close" onclick="hideModal('broadcastModal')">×</button>
+      <div class="modal-header">
+        <div class="modal-header-icon" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">📢</div>
+        <div><div class="modal-title">Telegram Broadcast</div><div class="modal-subtitle">Mass message to all bot subscribers</div></div>
+      </div>
+      <textarea id="broadcastMessage" class="input-control" placeholder="Type your broadcast... Markdown *bold* and _italic_ supported." style="margin-bottom:16px;"></textarea>
+      <button id="sendBroadcastBtn" class="btn btn-primary" style="width:100%;justify-content:center;" onclick="sendBroadcast()">Dispatch Broadcast</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="/admin-engine.js?v=8"></script>
+  <script src="/admin-tabs.js?v=1"></script>
+</body>
+</html>
+

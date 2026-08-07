@@ -1,0 +1,73 @@
+Options -Indexes
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+    AddCharset UTF-8 .html .css .js .json .php
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+</IfModule>
+
+ErrorDocument 404 /404.html
+ErrorDocument 500 /500.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Public API URLs are served by the backend without exposing its folder.
+    RewriteRule ^api/(app-ask|ask|quiz-api|leaderboard|app-config|auth-check|auth-login|auth-register|auth-verify-otp|auth-logout|auth-profile|auth-google|auth-forgot-password|auth-reset-password|report-problem|sync-history|subscription-plans|subscribe|verify-payment|save-fcm-token|telegram-webhook|ping|admin-login|admin-check|admin-logout|admin-stats|admin-config|admin-limit|admin-announcement|admin-subscriptions|admin-clear-cache|admin-export-csv|admin-export-telegram-csv|admin-export-usage|admin-reports|admin-telegram-broadcast|admin-telegram-users|push-broadcast)\.php$ backend/api/$1.php [END,NC]
+    RewriteRule ^api/ - [R=404,END,NC]
+
+    # Public application routes are served by the frontend without changing URLs.
+    RewriteRule ^$ frontend/index.html [END]
+    RewriteRule ^(login|admin-login|admin|maintenance|privacy|reset|terms)$ frontend/$1.html [END]
+    RewriteRule ^manifest\.json$ frontend/manifest.json [END]
+    RewriteRule ^sw\.js$ frontend/sw.js [END]
+
+    # Static frontend assets keep their existing root-relative URLs.
+    RewriteCond %{DOCUMENT_ROOT}/frontend/$1 -f
+    RewriteRule ^(.+)$ frontend/$1 [END]
+
+    # Never expose private backend/runtime/tooling directories.
+    RewriteRule ^(backend|data|storage|\.git|\.agents|\.codex|node_modules|\.quarantine)/ - [F,END,NC]
+    RewriteRule ^\.env(?:\..*)?$ - [F,END,NC]
+</IfModule>
+
+<FilesMatch "\.(env|toml|sqlite|sqlite-wal|sqlite-shm|log|key|pem)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<FilesMatch "\.json$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<Files "manifest.json">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Allow from all
+    </IfModule>
+</Files>
+
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header always set Content-Security-Policy "frame-ancestors 'self' https://nexzen.live https://www.nexzen.live https://nexa.nexzen.live https://nexzeninstitute.com https://www.nexzeninstitute.com"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(self), microphone=(self), geolocation=(), payment=(self)"
+</IfModule>
