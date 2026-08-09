@@ -1,24 +1,20 @@
-/* 
-   NexA AI — Admin Panel Design System 
-   Premium Dark Mode & Glassmorphism Aesthetics
-*/
+/* NexA AI admin design system */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg: #08090f;
-  --bg-grad: linear-gradient(135deg, #08090f 0%, #120e14 100%);
+  --bg: #11152A;
+  --bg-grad: linear-gradient(135deg, #11152A 0%, #120e14 100%);
   --surface: rgba(255, 255, 255, 0.03);
   --surface-hover: rgba(255, 255, 255, 0.06);
   --border: rgba(255, 255, 255, 0.08);
   --border-light: rgba(255, 255, 255, 0.15);
   --text: #ffffff;
   --text-muted: #a1a1aa;
-  
-  --accent: #e62335;
-  --accent-glow: rgba(230, 35, 53, 0.4);
-  --accent-hover: #ff3b4d;
-  
+
+  --accent: #625BEE;
+  --accent-glow: rgba(98, 91, 238, 0.4);
+  --accent-hover: #4F46E5;
+
   --success: #10b981;
   --success-glow: rgba(16, 185, 129, 0.2);
   --warning: #f59e0b;
@@ -33,8 +29,8 @@
 body {
   font-family: var(--font-sans);
   background: var(--bg);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(230, 35, 53, 0.08) 0%, transparent 50%),
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(98, 91, 238, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(88, 28, 135, 0.08) 0%, transparent 50%);
   color: var(--text);
   min-height: 100vh;
@@ -43,7 +39,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Glass Panels */
+/* NexA AI admin design system */
 .glass-panel {
   background: var(--surface);
   backdrop-filter: blur(20px);
@@ -53,7 +49,7 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* HEADER */
+/* NexA AI admin design system */
 .admin-header {
   display: flex;
   justify-content: space-between;
@@ -68,15 +64,15 @@ body {
 .brand-wrap img { height: 40px; width: auto; }
 .brand-text h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
 .brand-text h1 span { color: var(--accent); }
-.brand-badge { 
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; 
+.brand-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
   color: var(--accent); background: var(--accent-glow); padding: 2px 8px; border-radius: 12px;
 }
 
 .header-actions { display: flex; align-items: center; gap: 12px; }
 .admin-email { color: var(--text-muted); font-size: 14px; font-weight: 500; margin-right: 8px; }
 
-/* BUTTONS */
+/* NexA AI admin design system */
 .btn {
   background: var(--surface);
   color: var(--text);
@@ -107,7 +103,7 @@ body {
 
 .btn-icon svg { width: 16px; height: 16px; }
 
-/* DASHBOARD GRID */
+/* NexA AI admin design system */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -128,7 +124,7 @@ body {
 .card-half { grid-column: span 2; }
 @media(max-width: 1024px) { .card-half { grid-column: 1 / -1; } }
 
-/* FORMS & INPUTS */
+/* NexA AI admin design system */
 .input-group { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 16px; }
 .input-control {
   background: rgba(0,0,0,0.3);
@@ -146,7 +142,7 @@ body {
 
 textarea.input-control { resize: vertical; min-height: 80px; font-family: var(--font-sans); }
 
-/* TABLES */
+/* NexA AI admin design system */
 .table-wrap { width: 100%; overflow-x: auto; margin-top: 16px; }
 .table-wrap::-webkit-scrollbar { height: 6px; }
 .table-wrap::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 6px; }
@@ -158,17 +154,17 @@ td { color: var(--text); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(255,255,255,0.02); }
 
-/* BADGES */
+/* NexA AI admin design system */
 .badge {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.5px;
 }
 .badge-success { background: var(--success-glow); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
-.badge-danger { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(230,35,53,0.3); }
+.badge-danger { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(98,91,238,0.3); }
 .badge-neutral { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
 
-/* TOPIC LIST */
+/* NexA AI admin design system */
 .topic-list { max-height: 350px; overflow-y: auto; padding-right: 8px; margin-top: 16px; }
 .topic-list::-webkit-scrollbar { width: 4px; }
 .topic-list::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
@@ -177,7 +173,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .topic-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-family: var(--font-mono); }
 .topic-query { font-size: 14px; color: var(--text); line-height: 1.5; }
 
-/* MODALS */
+/* NexA AI admin design system */
 .modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
@@ -206,15 +202,15 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 .modal-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 .modal-value { font-size: 14px; color: #fff; font-weight: 500; }
 
-/* REPORTS */
+/* NexA AI admin design system */
 .report-item { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
 .report-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text-muted); margin-bottom: 12px; flex-wrap: wrap; }
 .report-text { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
 
-/* CHART CONTAINERS */
+/* NexA AI admin design system */
 .chart-container { position: relative; height: 300px; width: 100%; margin-top: 20px; }
 
-/* TOAST */
+/* NexA AI admin design system */
 #toast {
   position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
   background: rgba(255,255,255,0.9); color: #000; padding: 12px 24px;
@@ -226,7 +222,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 #toast.error { background: var(--accent); color: #fff; }
 #toast.success { background: var(--success); color: #fff; }
 
-/* SPINNER */
+/* NexA AI admin design system */
 .spinner {
   width: 40px; height: 40px; border: 3px solid var(--border);
   border-top-color: var(--accent); border-radius: 50%;
@@ -234,3 +230,32 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 #loadingScreen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; }
+
+/* NexA AI admin design system */
+:root {
+  --bg: #F7F8FC;
+  --bg-grad: linear-gradient(135deg, #F7F8FC 0%, #F0F1FA 100%);
+  --surface: #FFFFFF;
+  --surface-hover: #F3F2FF;
+  --border: #E6E8F0;
+  --border-light: #D7D9E7;
+  --text: #1B2430;
+  --text-muted: #9099A8;
+  --accent: #625BEE;
+  --accent-glow: rgba(98,91,238,.16);
+  --accent-hover: #4F46E5;
+}
+body { background: #F7F8FC; background-image: radial-gradient(circle at 82% 0%, rgba(142,139,255,.14), transparent 30rem); color: #1B2430; }
+.glass-panel { background: #FFFFFF; border-color: #E6E8F0; box-shadow: 0 18px 48px rgba(38,43,93,.08); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.btn { background: #FFFFFF; color: #1B2430; border-color: #E2E5ED; }
+.btn:hover { background: #F3F2FF; border-color: #CFCBFF; }
+.btn-primary { background: linear-gradient(135deg, #625BEE, #7E9CF8); border-color: transparent; color: #FFFFFF; box-shadow: 0 10px 24px rgba(98,91,238,.20); }
+.btn-primary:hover { background: linear-gradient(135deg, #544CE5, #7191F1); border-color: transparent; box-shadow: 0 14px 28px rgba(98,91,238,.25); }
+.stat-value { color: #1B2430; text-shadow: none; }
+.input-control { background: #F8F9FC; border-color: #E2E5ED; color: #1B2430; }
+.input-control:focus { border-color: #625BEE; box-shadow: 0 0 0 3px rgba(98,91,238,.10); }
+tr:hover td { background: #F8F8FD; }
+.modal-overlay { background: rgba(29,35,67,.32); }
+.modal-title, .modal-value, .report-text { color: #1B2430; }
+.modal-grid, .report-item { background: #F8F9FC; border-color: #E6E8F0; }
+#toast { box-shadow: 0 12px 30px rgba(38,43,93,.16); }

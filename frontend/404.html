@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 — Page Not Found | NexA AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="/logo-icon.png">
+  <link rel="stylesheet" href="/vendor/fonts.css">
+  <link rel="icon" href="/logo-icon.png?v=5">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --red: #e62335; --red2: #ff3d50;
-      --bg: #080a10; --text: #dce1f0; --text2: #6b7592;
+      --primary: #625BEE; --primary-strong: #4F46E5;
+      --bg: #11152A; --text: #F1F3FF; --text2: #AEB6CA;
       --sans: 'Outfit', sans-serif;
     }
     html, body { height: 100%; }
@@ -22,7 +21,7 @@
     }
     .bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
     .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; }
-    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(230,35,53,0.4), transparent 70%); top: -150px; right: -100px; animation: o1 20s ease-in-out infinite; }
+    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(98,91,238,0.4), transparent 70%); top: -150px; right: -100px; animation: o1 20s ease-in-out infinite; }
     .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(80,40,160,0.35), transparent 70%); bottom: -120px; left: -80px; animation: o2 25s ease-in-out infinite; }
     @keyframes o1 { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(-60px,80px)scale(1.1)} }
     @keyframes o2 { 0%,100%{transform:translate(0,0)scale(1)} 50%{transform:translate(70px,-60px)scale(1.12)} }
@@ -30,7 +29,7 @@
     .container { position: relative; z-index: 1; padding: 40px 24px; max-width: 520px; }
     .error-code {
       font-size: 140px; font-weight: 800; line-height: 1;
-      background: linear-gradient(135deg, var(--red), var(--red2), #ff6b7a);
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong), #2FB9EE);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text; letter-spacing: -4px;
       animation: pulse 3s ease-in-out infinite;
@@ -46,13 +45,13 @@
     .btn-home {
       display: inline-flex; align-items: center; gap: 8px;
       margin-top: 32px; padding: 14px 32px;
-      background: linear-gradient(135deg, var(--red), var(--red2));
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
       color: #fff; font-family: var(--sans); font-size: 15px; font-weight: 600;
       border: none; border-radius: 14px; cursor: pointer;
       text-decoration: none; transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(230,35,53,0.3);
+      box-shadow: 0 4px 20px rgba(98,91,238,0.3);
     }
-    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230,35,53,0.4); }
+    .btn-home:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(98,91,238,0.4); }
 
     .logo { margin-bottom: 20px; opacity: 0.6; }
     .logo img { height: 28px; }
@@ -64,7 +63,7 @@
     <div class="orb orb-2"></div>
   </div>
   <div class="container">
-    <div class="logo"><img src="/logo.png" alt="NexA AI"></div>
+    <div class="logo"><img src="/logo.png?v=5" alt="NexA AI"></div>
     <div class="error-code">404</div>
     <div class="error-title">Page not found</div>
     <div class="error-desc">

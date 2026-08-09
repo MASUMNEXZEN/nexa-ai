@@ -69,6 +69,8 @@ if ($isInsideFrontend && is_file($resolvedFile)) {
         'ico' => 'image/x-icon',
         'woff' => 'font/woff',
         'woff2' => 'font/woff2',
+        'ttf' => 'font/ttf',
+        'otf' => 'font/otf',
     ];
     $extension = strtolower(pathinfo($resolvedFile, PATHINFO_EXTENSION));
     header('Content-Type: ' . ($mimeTypes[$extension] ?? 'application/octet-stream'));

@@ -19,13 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$rawBody = file_get_contents('php://input');
-$body = json_decode($rawBody, true) ?: [];
+$body = nexa_read_json_body(15000000, 'Invalid request body.');
 
 if (!$body || !isset($body['contents'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid request body.']);
     exit;
+}
+
+$validationError = nexa_validate_ai_request($body);
+if ($validationError !== null) {
+    nexa_reject_json(400, $validationError);
 }
 
 // Identify user (App Mode) - Secure against fake devices by adding IP
@@ -71,11 +75,11 @@ if ($db) {
 $normalizedQ = strtolower(trim($userQuestionFull));
 $normalizedQ = (string)preg_replace('/\s+/', ' ', $normalizedQ);
 $sysTextForCache = $body['system_instruction']['parts'][0]['text'] ?? '';
-$qHash = md5($normalizedQ . '|' . $sysTextForCache);
+$qHash = md5(NEXA_RESPONSE_CACHE_VERSION . '|' . $normalizedQ . '|' . $sysTextForCache);
 
 $cachedResponse = null;
 $cacheDb = get_cache_db();
-if ($cacheDb) {
+if (NEXA_CHAT_RESPONSE_CACHE_ENABLED && $cacheDb) {
     try {
         $stmt = $cacheDb->prepare("SELECT answer FROM cache_responses WHERE q_hash = ? LIMIT 1");
         $stmt->execute([$qHash]);
@@ -86,7 +90,7 @@ if ($cacheDb) {
 if ($cachedResponse) {
     while (ob_get_level() > 0) ob_end_clean();
     header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Connection: keep-alive');
     header('X-Accel-Buffering: no');
     
@@ -138,7 +142,7 @@ if (isset($body['system_instruction']['parts'][0]['text'])) {
 
 while (ob_get_level() > 0) ob_end_clean();
 header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
+header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no');
 
@@ -209,7 +213,7 @@ if ($httpCode === 200) {
     }
     // Only cache if response is substantial and does not look like an error (bug fix)
     $isErrorResponse = stripos($fullTextAccum, 'error') !== false && strlen($fullTextAccum) < 200;
-    if (!$isImageRequest && strlen($fullTextAccum) > 50 && !$isErrorResponse && isset($cacheDb) && $cacheDb) {
+    if (NEXA_CHAT_RESPONSE_CACHE_ENABLED && !$isImageRequest && strlen($fullTextAccum) > 50 && !$isErrorResponse && isset($cacheDb) && $cacheDb) {
         try {
             $cacheDb->prepare("INSERT OR IGNORE INTO cache_responses (q_hash, question, answer) VALUES (?, ?, ?)")
                     ->execute([$qHash, $userQuestionFull, $fullTextAccum]);

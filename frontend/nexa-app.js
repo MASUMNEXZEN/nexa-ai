@@ -17,7 +17,112 @@ const hide= (id)           => { const e = el(id); if (e) e.classList.add('hidden
 const tog = (id, on)       => { const e = el(id); if (e) e.classList.toggle('hidden', !on); };
 const attr= (id, a, v)     => { const e = el(id); if (e) e.setAttribute(a, v); };
 
-/* ── STATE ─────────────────────────────────────────────── */
+/* Accessible surface state: one active drawer/dialog, predictable focus return. */
+const surfaceState = { id: null, returnTo: null, close: null, bodyOverflow: '' };
+const focusableSelector = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function getFocusable(container) {
+  return Array.from(container?.querySelectorAll(focusableSelector) || [])
+    .filter(node => !node.closest('.hidden') && node.getClientRects().length > 0);
+}
+
+function activateSurface(id, returnTo, close) {
+  const surface = el(id);
+  if (!surface) return;
+  surfaceState.id = id;
+  surfaceState.returnTo = returnTo instanceof HTMLElement ? returnTo : null;
+  surfaceState.close = close;
+  surfaceState.bodyOverflow = document.body.style.overflow;
+  surface.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => {
+    const first = getFocusable(surface)[0];
+    (first || surface).focus();
+  });
+}
+
+function releaseSurface(id, restoreFocus = true) {
+  const surface = el(id);
+  if (surface) {
+    surface.setAttribute('aria-hidden', 'true');
+    surface.classList.add('hidden');
+  }
+  if (surfaceState.id !== id) return;
+  const returnTo = surfaceState.returnTo;
+  const previousOverflow = surfaceState.bodyOverflow;
+  surfaceState.id = null;
+  surfaceState.returnTo = null;
+  surfaceState.close = null;
+  surfaceState.bodyOverflow = '';
+  document.body.style.overflow = previousOverflow;
+  if (restoreFocus && returnTo && document.contains(returnTo) && !returnTo.closest('.hidden')) {
+    returnTo.focus();
+  }
+}
+
+function handleSurfaceKeydown(event) {
+  const surface = surfaceState.id ? el(surfaceState.id) : null;
+  if (!surface || surface.classList.contains('hidden')) return;
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    surfaceState.close?.();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const focusable = getFocusable(surface);
+  if (!focusable.length) {
+    event.preventDefault();
+    surface.focus();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+document.addEventListener('keydown', handleSurfaceKeydown);
+
+function answerTextForAction(button) {
+  return button.closest('.bubble')?.querySelector('.ai-text')?.textContent || '';
+}
+
+function handleAppAction(event) {
+  const button = event.target.closest('[data-action]');
+  if (!button) return;
+  const action = button.dataset.action;
+  if (action === 'remove-attachment') removeAttach(Number(button.dataset.index));
+  else if (action === 'select-exam') selectExam(button.dataset.exam || '');
+  else if (action === 'select-other-exam') selectOtherExam();
+  else if (action === 'back-to-welcome') backToWelcome();
+  else if (action === 'copy-answer') copyText(button, answerTextForAction(button));
+  else if (action === 'save-answer') saveBookmark(answerTextForAction(button), button);
+  else if (action === 'quiz-answer') onQuizAnswer(button, Number(button.dataset.idx));
+  else if (action === 'pick-quiz') pickQuizOption(button);
+  else if (action === 'targeted-quiz') startTargetedQuiz(button.dataset.topic || '');
+  else if (action === 'delete-bookmark') deleteBookmark(Number(button.dataset.id));
+  else if (action === 'close-leaderboard') closeLeaderboard();
+}
+
+document.addEventListener('click', handleAppAction);
+document.addEventListener('error', (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied === 'true') return;
+  image.dataset.fallbackApplied = 'true';
+  image.src = '/icon-512.png';
+}, true);
 const state = {
   user:        null,   // { email, name, type, profile, referralCode, bonus_limit }
   todayCount:  0,
@@ -62,7 +167,7 @@ async function guestBoot() {
   const isFresh = state.urlParams.get('fresh') === '1';
   if (isFresh) {
     chatHistory = [];
-    try { localStorage.removeItem(HISTORY_KEY); } catch {}
+    try { localStorage.removeItem(HISTORY_KEY); localStorage.removeItem('nexa-exam'); } catch {}
   }  state.user = { email: 'guest', name: 'Guest', type: 'guest', profile: {} };
   state.dailyLimit = 10;
   applySavedTheme();
@@ -136,7 +241,7 @@ function showApp() {
    THEME
 ═══════════════════════════════════════════════════════ */
 function applySavedTheme() {
-  const saved = localStorage.getItem('nexa-theme') || 'dark';
+  const saved = localStorage.getItem('nexa-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   const drawerTog = el('themeToggleDrawer');
   if (drawerTog) drawerTog.checked = (saved === 'dark');
@@ -159,6 +264,8 @@ function populateProfile() {
 
   set('avatarEl',       initial);
   set('drawerAvatarEl', initial);
+  set('sidebarAvatarEl', initial);
+  set('sidebarUserName', state.user.name || state.user.email);
   set('drawerName',     state.user.name || state.user.email);
   set('drawerEmail',    state.user.email);
   set('drawerTypeBadge', state.user.type === 'google' ? 'Google' : state.user.type === 'app' ? 'App' : 'Free');
@@ -169,7 +276,7 @@ function populateProfile() {
   // Admin panel link
   if (state.user.type === 'admin') {
     const sec = el('adminSection');
-    if (sec) sec.style.display = 'block';
+    if (sec) sec.classList.remove('hidden');
   }
 
   // Update logged out btn
@@ -221,9 +328,12 @@ function bindAll() {
   on('drawerOverlay','click', closeDrawer);
   on('drawerCloseBtn','click', closeDrawer);
   on('drawerLogoutBtn','click', doLogout);
+  on('changeExamDrawerBtn', 'click', () => { closeDrawer(); renderExamPicker(); });
 
   /* Theme */
   on('themeToggle', 'click', toggleTheme);
+  on('sidebarToggleBtn', 'click', toggleWorkspaceSidebar);
+  on('sidebarScrim', 'click', closeWorkspaceSidebar);
   on('themeToggleDrawer', 'change', toggleTheme);
 
   /* Clear cache */
@@ -238,11 +348,19 @@ function bindAll() {
   /* Quiz */
   on('quizBtn',       'click', openQuizSetup);
   on('quizCloseBtn',  'click', closeQuizSetup);
-  on('quizOverlay',   'click', closeQuizSetup);
+  on('quizOverlay',   'click', () => {
+    if (qs('.leaderboard-modal')) closeLeaderboard();
+    else closeQuizSetup();
+  });
   on('startQuizBtn',  'click', startQuiz);
   
   /* New Chat */
   on('newChatBtn',    'click', startNewChat);
+  on('sidebarNewChatBtn', 'click', startNewChat);
+  on('sidebarChatBtn', 'click', focusChatWorkspace);
+  on('sidebarQuizBtn', 'click', () => { closeWorkspaceSidebar(); openQuizSetup(); });
+  on('sidebarSavedBtn', 'click', () => { closeWorkspaceSidebar(); openDrawer(); setTimeout(() => el('bookmarksSection')?.scrollIntoView({ block: 'start' }), 0); });
+  on('sidebarProfileBtn', 'click', () => { closeWorkspaceSidebar(); openDrawer(); });
 
   /* Quiz Pill (dedicated big button) */
   on('quizPillBtn',   'click', openQuizSetup);
@@ -261,12 +379,18 @@ function bindAll() {
 
   // Quiz count/diff toggle buttons
   qsa('.quiz-count-btn').forEach(btn => btn.addEventListener('click', () => {
-    qsa('.quiz-count-btn').forEach(b => b.classList.remove('quiz-count-btn--active'));
+    qsa('.quiz-count-btn').forEach(b => {
+      b.classList.remove('quiz-count-btn--active');
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
     btn.classList.add('quiz-count-btn--active');
     state.quizCount = parseInt(btn.dataset.val, 10);
   }));
   qsa('.quiz-diff-btn').forEach(btn => btn.addEventListener('click', () => {
-    qsa('.quiz-diff-btn').forEach(b => b.classList.remove('quiz-diff-btn--active'));
+    qsa('.quiz-diff-btn').forEach(b => {
+      b.classList.remove('quiz-diff-btn--active');
+      b.setAttribute('aria-pressed', String(b === btn));
+    });
     btn.classList.add('quiz-diff-btn--active');
     state.quizDiff = btn.dataset.val;
   }));
@@ -304,6 +428,12 @@ function bindAll() {
     if (qInput) { qInput.value = chip.textContent; qInput.focus(); autoResizeTextarea(qInput); }
   }));
 
+  /* Suggested prompt shortcuts */
+  qsa('.workspace-history__item').forEach(item => item.addEventListener('click', () => {
+    const qInput = el('questionInput');
+    if (qInput) { qInput.value = item.textContent.trim(); qInput.focus(); autoResizeTextarea(qInput); }
+  }));
+
   /* Scroll FAB */
   const chatArea = el('chatArea');
   if (chatArea) {
@@ -323,19 +453,18 @@ function on(id, evt, fn) {
    DRAWER
 ═══════════════════════════════════════════════════════ */
 function openDrawer() {
-  show('drawerOverlay'); show('profileDrawer');
-  document.body.style.overflow = 'hidden';
+  const trigger = document.activeElement;
+  show('drawerOverlay');
+  show('profileDrawer');
+  attr('drawerOverlay', 'aria-hidden', 'false');
+  activateSurface('profileDrawer', trigger, closeDrawer);
 }
-function closeDrawer() {
+function closeDrawer({ restoreFocus = true } = {}) {
   const drawer = el('profileDrawer');
-  if (drawer) {
-    drawer.classList.add('closing');
-    setTimeout(() => {
-      hide('profileDrawer'); hide('drawerOverlay');
-      drawer.classList.remove('closing');
-      document.body.style.overflow = '';
-    }, 250);
-  }
+  drawer?.classList.remove('closing');
+  hide('drawerOverlay');
+  attr('drawerOverlay', 'aria-hidden', 'true');
+  releaseSurface('profileDrawer', restoreFocus);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -369,8 +498,19 @@ async function clearAppCache() {
 /* ═══════════════════════════════════════════════════════
    REPORT A PROBLEM
 ═══════════════════════════════════════════════════════ */
-function openReport()  { closeDrawer(); show('reportOverlay'); show('reportCard'); }
-function closeReport() { hide('reportOverlay'); hide('reportCard'); }
+function openReport() {
+  const trigger = surfaceState.id === 'profileDrawer' ? surfaceState.returnTo : document.activeElement;
+  closeDrawer({ restoreFocus: false });
+  show('reportOverlay');
+  show('reportCard');
+  attr('reportOverlay', 'aria-hidden', 'false');
+  activateSurface('reportCard', trigger, closeReport);
+}
+function closeReport() {
+  hide('reportOverlay');
+  attr('reportOverlay', 'aria-hidden', 'true');
+  releaseSurface('reportCard');
+}
 async function submitReport() {
   const text = (el('reportText')?.value || '').trim();
   if (!text) { showToast('Please describe the issue.'); return; }
@@ -426,7 +566,7 @@ function handleFileAttach(e) {
 function renderImagePreview() {
   const strip = el('imagePreview');
   if (!strip) return;
-  strip.style.display = state.attachedFiles.length ? 'flex' : 'none';
+  strip.classList.toggle('hidden', !state.attachedFiles.length);
   strip.innerHTML = state.attachedFiles.map((f, i) => `
     <div class="img-thumb">
       ${f.type === 'image'
@@ -435,7 +575,7 @@ function renderImagePreview() {
               border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
               font-size:10px;color:var(--text2);padding:4px;text-align:center;overflow:hidden;">${escHtml(f.name)}</div>`
       }
-      <button class="img-thumb-remove" onclick="removeAttach(${i})">×</button>
+      <button class="img-thumb-remove" data-action="remove-attachment" data-index="${i}">×</button>
     </div>`
   ).join('');
 }
@@ -520,6 +660,40 @@ function startNewChat() {
   state.quizActive = false;
   // Restore welcome bubble
   renderWelcome();
+  el('questionInput')?.focus();
+}
+
+function focusChatWorkspace() {
+  closeWorkspaceSidebar();
+  closeDrawer();
+  closeQuizSetup();
+  el('questionInput')?.focus();
+}
+
+function toggleWorkspaceSidebar() {
+  const app = el('appShell');
+  if (!app) return;
+  const isMobile = window.matchMedia('(max-width: 820px)').matches;
+  app.classList.toggle(isMobile ? 'sidebar-open' : 'sidebar-collapsed');
+  updateSidebarToggleState();
+}
+
+function closeWorkspaceSidebar() {
+  const app = el('appShell');
+  if (!app) return;
+  app.classList.remove('sidebar-open');
+  updateSidebarToggleState();
+}
+
+function updateSidebarToggleState() {
+  const app = el('appShell');
+  const button = el('sidebarToggleBtn');
+  if (!app || !button) return;
+  const isMobile = window.matchMedia('(max-width: 820px)').matches;
+  const isOpen = isMobile ? app.classList.contains('sidebar-open') : !app.classList.contains('sidebar-collapsed');
+  button.setAttribute('aria-expanded', String(isOpen));
+  button.setAttribute('aria-label', isOpen ? 'Hide study navigation' : 'Show study navigation');
+  button.title = isOpen ? 'Hide study navigation' : 'Show study navigation';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -529,33 +703,28 @@ function renderWelcome() {
   const area = el('chatArea');
   if (!area || area.children.length > 0) return;
 
-  const savedExam = localStorage.getItem('nexa-exam');
+  const savedExamValue = localStorage.getItem('nexa-exam');
+  const savedExam = savedExamValue && savedExamValue.toLowerCase() !== 'hello' ? savedExamValue : null;
+  if (savedExamValue && !savedExam) { try { localStorage.removeItem('nexa-exam'); } catch {} }
   const firstName = escHtml(state.user?.name?.split(' ')[0] || 'Student');
 
   if (!savedExam) {
     area.innerHTML = `
-      <div class="welcome-state exam-picker">
-        <div class="welcome-logo"><img src="/logo.png?v=2" alt="NexA AI" onerror="this.src='/icon-512.png'"></div>
-        <div class="welcome-kicker">PERSONALIZED STUDY SPACE</div>
+      <div class="welcome-state general-welcome">
+        <div class="welcome-logo"><img src="/logo.png?v=4" alt="NexA AI"></div>
+        <div class="welcome-kicker">NEXA AI STUDY COMPANION</div>
         <div class="welcome-title">Welcome, <em>${firstName}</em></div>
-        <div class="welcome-sub">Choose your target exam and NexA will tailor your study workspace.</div>
-        <div class="exam-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0;max-width:440px;width:100%;">
-          <button class="quiz-count-btn" onclick="selectExam('ANM/GNM')">ANM / GNM</button>
-          <button class="quiz-count-btn" onclick="selectExam('JENPAS UG')">JENPAS UG</button>
-          <button class="quiz-count-btn" onclick="selectExam('WBJEE')">WBJEE</button>
-          <button class="quiz-count-btn" onclick="selectExam('WBP / KP')">WBP / KP Police</button>
-          <button class="quiz-count-btn" onclick="selectExam('WBCS')">WBCS</button>
-          <button class="quiz-count-btn" onclick="selectExam('RRB / SSC')">RRB / SSC</button>
-          <button class="quiz-count-btn" onclick="selectExam('Class 10 (Madhyamik)')">Madhyamik</button>
-          <button class="quiz-count-btn" onclick="selectExam('Class 12 (HS)')">Higher Secondary</button>
+        <div class="welcome-sub">Ask questions, practise concepts, and build a study plan in English or Bengali.</div>
+        <div class="welcome-context">Start chatting now. You can choose a target exam whenever you are ready.</div>
+        <div class="welcome-chips">
+          <button class="welcome-chip" type="button">Explain this topic simply</button>
+          <button class="welcome-chip" type="button">Create a 10-question quiz</button>
+          <button class="welcome-chip" type="button">Build my study plan</button>
         </div>
-        <div class="exam-other-box" style="display:flex;gap:8px;max-width:440px;width:100%;margin-top:8px;">
-          <input type="text" id="otherExamInput" class="question-input" style="flex:1;border-radius:16px;min-height:44px;" placeholder="Or enter another exam, e.g. NEET">
-          <button class="send-btn" style="width:44px;height:44px;" onclick="selectOtherExam()" aria-label="Choose exam">
-            <svg viewBox="0 0 24 24" fill="none" class="send-icon" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </button>
-        </div>
+        <button class="welcome-exam-link" id="chooseExamBtn" type="button">Choose a target exam <span aria-hidden="true">&rarr;</span></button>
       </div>`;
+    bindWelcomePromptChips();
+    el('chooseExamBtn')?.addEventListener('click', renderExamPicker);
     return;
   }
 
@@ -570,18 +739,80 @@ function renderWelcome() {
 
   area.innerHTML = `
     <div class="welcome-state">
-      <div class="welcome-logo"><img src="/logo.png?v=2" alt="NexA AI" onerror="this.src='/icon-512.png'"></div>
+      <div class="welcome-logo"><img src="/logo.png?v=4" alt="NexA AI"></div>
       <div class="welcome-kicker">NEXA AI STUDY COMPANION</div>
       <div class="welcome-title">Welcome back, <em>${firstName}</em></div>
       <div class="welcome-sub">Target exam: <strong>${escHtml(savedExam)}</strong></div>
       <div class="welcome-context">Ask a question, choose a study prompt, or start a mock quiz.</div>
       <div class="welcome-chips">${chipsByExam.map(label => `<button class="welcome-chip" type="button">${escHtml(label)}</button>`).join('')}</div>
+      <button class="welcome-exam-link" id="changeExamBtn" type="button">Change target exam <span aria-hidden="true">&rarr;</span></button>
     </div>`;
 
+  bindWelcomePromptChips();
+  el('changeExamBtn')?.addEventListener('click', renderExamPicker);
+}
+
+function bindWelcomePromptChips() {
   qsa('.welcome-chip').forEach(chip => chip.addEventListener('click', () => {
     const qInput = el('questionInput');
-    if (qInput) { qInput.value = chip.textContent; qInput.focus(); autoResizeTextarea(qInput); }
+    if (qInput) { qInput.value = chip.textContent.trim(); qInput.focus(); autoResizeTextarea(qInput); }
   }));
+}
+
+function renderExamPicker() {
+  const area = el('chatArea');
+  if (!area) return;
+  area.innerHTML = `
+    <div class="welcome-state exam-picker">
+      <div class="welcome-logo"><img src="/logo.png?v=4" alt="NexA AI"></div>
+      <div class="welcome-kicker">PERSONALIZED STUDY SPACE</div>
+      <div class="welcome-title">Choose your <em>target</em></div>
+      <div class="welcome-sub">Nexa will tailor prompts, quizzes, and explanations to your exam.</div>
+      <div class="exam-grid">
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="ANM/GNM">ANM / GNM</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="JENPAS UG">JENPAS UG</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="WBJEE">WBJEE</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="WBP / KP">WBP / KP Police</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="WBCS">WBCS</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="RRB / SSC">RRB / SSC</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="Class 10 (Madhyamik)">Madhyamik</button>
+        <button class="quiz-count-btn" data-action="select-exam" data-exam="Class 12 (HS)">Higher Secondary</button>
+      </div>
+      <div class="exam-other-box">
+        <input type="text" id="otherExamInput" class="question-input exam-other-input" placeholder="Or enter another exam, e.g. NEET">
+        <button class="send-btn exam-other-submit" type="button" data-action="select-other-exam" aria-label="Choose exam">
+          <svg viewBox="0 0 24 24" fill="none" class="send-icon" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </div>
+      <button class="welcome-exam-link" type="button" data-action="back-to-welcome">Back to chat</button>
+    </div>`;
+}
+
+function backToWelcome() {
+  const area = el('chatArea');
+  if (area) area.innerHTML = '';
+  renderWelcome();
+}
+
+function selectExam(exam) {
+  const value = String(exam || '').trim();
+  if (!value) return;
+  localStorage.setItem('nexa-exam', value);
+  state.selectedExam = value;
+  const area = el('chatArea');
+  if (area) area.innerHTML = '';
+  renderWelcome();
+}
+
+function selectOtherExam() {
+  const input = el('otherExamInput');
+  const value = (input?.value || '').trim();
+  if (!value) {
+    showToast('Enter an exam name first.');
+    input?.focus();
+    return;
+  }
+  selectExam(value.substring(0, 80));
 }
 
 async function sendMessage() {
@@ -741,6 +972,7 @@ You are now a dedicated quiz master. Ask EXACTLY ONE MCQ at a time. Label option
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-Device-Id': deviceId },
     body: JSON.stringify(requestBody),
+    cache: 'no-store',
     signal,
   });
 
@@ -831,7 +1063,7 @@ function createStreamBubble() {
   const row = document.createElement('div');
   row.className = 'msg ai';
   row.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble"><div class="ai-text"></div></div>`;
   area.appendChild(row);
   return { bubble: row.querySelector('.bubble'), textEl: row.querySelector('.ai-text') };
@@ -862,7 +1094,7 @@ function appendAIBubble(text, withReaction = true) {
   const row = document.createElement('div');
   row.className = 'msg ai';
   row.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble"><div class="ai-text">${renderMarkdown(text)}</div><span class="chat-timestamp">${timeStr}</span></div>`;
   area.appendChild(row);
   const bubble = row.querySelector('.bubble');
@@ -882,7 +1114,7 @@ function addTypingIndicator() {
   row.id = id;
   row.className = 'msg ai typing-indicator';
   row.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
   area.appendChild(row);
   scrollToBottom();
@@ -899,7 +1131,7 @@ function addReactionBar(bubble, text) {
   const bar = document.createElement('div');
   bar.className = 'reaction-bar';
   bar.innerHTML = `
-    <button title="Copy" onclick="copyText(this, \`${cssEsc(text)}\`)">📋 Copy</button>`;
+    <button title="Copy" data-action="copy-answer">📋 Copy</button>`;
   bubble.appendChild(bar);
 }
 
@@ -958,7 +1190,11 @@ function showLimitBanner() {
    QUIZ MODE
 ═══════════════════════════════════════════════════════ */
 function openQuizSetup() {
-  show('quizOverlay'); show('quizSetupCard');
+  const trigger = document.activeElement;
+  show('quizOverlay');
+  show('quizSetupCard');
+  attr('quizOverlay', 'aria-hidden', 'false');
+  activateSurface('quizSetupCard', trigger, closeQuizSetup);
   const ti = el('quizTopicInput');
   if (ti) {
     const ex = state.selectedExam || '';
@@ -966,10 +1202,13 @@ function openQuizSetup() {
     else if (ex.includes('ANM') || ex.includes('JENPAS')) ti.placeholder = 'e.g. Cell Biology, Anatomy, Logic...';
     else if (ex.includes('WBP') || ex.includes('SSC') || ex.includes('WBCS')) ti.placeholder = 'e.g. Indian History, Geography, Polity...';
     else ti.placeholder = 'e.g. Cell Biology, Algebra, English Grammar...';
-    ti.focus();
   }
 }
-function closeQuizSetup() { hide('quizOverlay'); hide('quizSetupCard'); }
+function closeQuizSetup() {
+  hide('quizOverlay');
+  attr('quizOverlay', 'aria-hidden', 'true');
+  releaseSurface('quizSetupCard');
+}
 
 async function startQuiz() {
   const topic = (el('quizTopicInput')?.value || '').trim();
@@ -1007,7 +1246,7 @@ async function startQuiz() {
   const headerRow = document.createElement('div');
   headerRow.className = 'msg ai';
   headerRow.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
       <div style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">🧠 ${escHtml(topic)} Quiz</div>
       <div style="font-size:13px;color:var(--text2)">${state.quizCount} questions · ${diffLabel} · Tap an option to answer</div>
@@ -1041,6 +1280,7 @@ async function loadNextQuizQuestion() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
       body: JSON.stringify({
         action:     'get_quiz',
         topic:      state.quizTopic,
@@ -1085,7 +1325,7 @@ function renderQuizCard(q, idx) {
 
   const opts = q.options.map((opt, i) => {
     const letter = String.fromCharCode(65 + i);
-    return `<button class="quiz-option" data-idx="${i}" onclick="onQuizAnswer(this, ${i})">
+    return `<button class="quiz-option" data-idx="${i}" data-action="quiz-answer">
       <span class="quiz-option-letter">${letter}.</span>
       <span>${escHtml(opt)}</span>
     </button>`;
@@ -1094,7 +1334,7 @@ function renderQuizCard(q, idx) {
   const row = document.createElement('div');
   row.className = 'msg ai';
   row.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
       <div class="quiz-q-header">Question ${idx + 1} of ${state.quizTotal} · ${String({easy:'Easy',medium:'Medium',hard:'Hard'}[state.quizDiff]||'Medium')}</div>
       <div class="quiz-question">${escHtml(q.question)}</div>
@@ -1196,7 +1436,7 @@ function renderQuizScore() {
   let targetedHtml = '';
   if (weakTopics.size > 0 && pct < 100) {
       const topicBtns = Array.from(weakTopics).slice(0, 3).map(t => 
-          `<button class="weak-topic-btn" onclick="startTargetedQuiz('${escHtml(t).replace(/'/g, '\\\'')}')">
+          `<button class="weak-topic-btn" data-action="targeted-quiz" data-topic="${escHtml(t)}">
              🎯 Practice ${escHtml(t)}
            </button>`
       ).join('');
@@ -1213,7 +1453,7 @@ function renderQuizScore() {
   const row = document.createElement('div');
   row.className = 'msg ai';
   row.innerHTML = `
-    <div class="msg-avatar"><img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'"></div>
+    <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
       <div class="quiz-score-card">
         <div class="quiz-score-stars">${stars}</div>
@@ -1308,7 +1548,7 @@ function renderQuizCards(bubble, text) {
 
   const wrapId = 'qw' + Date.now();
   const optBtns = options.map(opt => `
-    <button class="quiz-option" data-letter="${escHtml(opt.letter)}" onclick="pickQuizOption(this)">
+    <button class="quiz-option" data-letter="${escHtml(opt.letter)}" data-action="pick-quiz">
       <span class="quiz-option-letter">${escHtml(opt.letter)}.</span>
       <span>${escHtml(opt.text)}</span>
     </button>`).join('');
@@ -1415,7 +1655,7 @@ function escHtml(str) {
     .replace(/"/g,'&quot;')
     .replace(/'/g,'&#039;');
 }
-function cssEsc(str) { return String(str ?? '').replace(/`/g, '\\`').replace(/\$/g, '\\$'); }
+
 
 function showToast(msg, type = 'error') {
   const t = el('toast');
@@ -1530,7 +1770,7 @@ function renderBookmarks() {
   }
   list.innerHTML = bookmarks.map(b => `
     <div class="bookmark-item">
-      <button class="bookmark-del" onclick="deleteBookmark(${b.id})" title="Delete">✕</button>
+      <button class="bookmark-del" data-action="delete-bookmark" data-id="${b.id}" title="Delete">✕</button>
       <div class="bookmark-text">${escHtml(b.text.replace(/[*_#`]/g, ''))}</div>
       <div class="bookmark-time">${escHtml(b.time)}</div>
     </div>`).join('');
@@ -1543,32 +1783,42 @@ function addReactionBar(bubble, text) {
   const bar = document.createElement('div');
   bar.className = 'reaction-bar';
   bar.innerHTML = `
-    <button title="Copy" onclick="copyText(this, \`${cssEsc(text)}\`)">📋 Copy</button>
-    <button title="Save to bookmarks" onclick="(function(btn){saveBookmark(\`${cssEsc(text)}\`,btn)})(this)">🔖 Save</button>`;
+    <button title="Copy" data-action="copy-answer">📋 Copy</button>
+    <button title="Save to bookmarks" data-action="save-answer">🔖 Save</button>`;
   bubble.appendChild(bar);
 }
 
 /* ── LEADERBOARD ─────────────────────────────────────────── */
 async function openLeaderboard() {
-  if (typeof closeDrawer === 'function') closeDrawer();
+  const trigger = surfaceState.id === 'profileDrawer' ? surfaceState.returnTo : document.activeElement;
+  if (typeof closeDrawer === 'function') closeDrawer({ restoreFocus: false });
   // Remove existing modal
   const existing = document.querySelector('.leaderboard-modal');
-  if (existing) { existing.remove(); return; }
+  if (existing) { closeLeaderboard(); return; }
 
   const overlay = el('quizOverlay');
-  if (overlay) overlay.classList.remove('hidden');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
 
   const modal = document.createElement('div');
   modal.className = 'leaderboard-modal';
+  modal.id = 'leaderboardModal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'leaderboardTitle');
+  modal.setAttribute('tabindex', '-1');
   modal.innerHTML = `
     <div class="leaderboard-header">
-      <h2>🏆 Today's Top Scorers</h2>
-      <button class="icon-btn" onclick="this.closest('.leaderboard-modal').remove();document.getElementById('quizOverlay')?.classList.add('hidden');">
+      <h2 id="leaderboardTitle">🏆 Today's Top Scorers</h2>
+      <button type="button" class="icon-btn" data-action="close-leaderboard" aria-label="Close leaderboard">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="leaderboard-list" id="lbList"><div class="lb-empty">Loading...</div></div>`;
   document.body.appendChild(modal);
+  activateSurface('leaderboardModal', trigger, closeLeaderboard);
 
   try {
     const res  = await fetch('/api/leaderboard.php', { credentials: 'include' });
@@ -1591,6 +1841,14 @@ async function openLeaderboard() {
     const lbList = el('lbList');
     if (lbList) lbList.innerHTML = '<div class="lb-empty">Could not load leaderboard right now.</div>';
   }
+
+}
+
+function closeLeaderboard() {
+  document.querySelector('.leaderboard-modal')?.remove();
+  hide('quizOverlay');
+  attr('quizOverlay', 'aria-hidden', 'true');
+  releaseSurface('leaderboardModal');
 }
 
 /* ════════════════════════════════════════════════════════════

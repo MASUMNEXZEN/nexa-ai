@@ -1,6 +1,6 @@
 (function() {
   const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600&display=swap');
+    @import url('/vendor/fonts.css');
 
     #nexa-chat-widget-btn {
       position: fixed;
@@ -8,9 +8,9 @@
       right: 24px;
       width: 64px;
       height: 64px;
-      background: #08090f;
+      background: #11152A;
       border-radius: 50%;
-      box-shadow: 0 8px 32px rgba(230, 35, 53, 0.4), inset 0 0 0 1px rgba(255,255,255,0.1);
+      box-shadow: 0 8px 32px rgba(98, 91, 238, 0.4), inset 0 0 0 1px rgba(255,255,255,0.1);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -27,7 +27,7 @@
       position: absolute;
       inset: -4px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #e62335, #ff3b4d);
+      background: linear-gradient(135deg, #625BEE, #4F46E5);
       z-index: -1;
       opacity: 0;
       transition: opacity 0.4s ease;
@@ -36,7 +36,7 @@
 
     #nexa-chat-widget-btn:hover {
       transform: translateY(-4px) scale(1.05);
-      box-shadow: 0 12px 40px rgba(230, 35, 53, 0.6), inset 0 0 0 1px rgba(255,255,255,0.2);
+      box-shadow: 0 12px 40px rgba(98, 91, 238, 0.6), inset 0 0 0 1px rgba(255,255,255,0.2);
     }
     #nexa-chat-widget-btn:hover::before {
       opacity: 1;
@@ -102,7 +102,7 @@
       height: 680px;
       max-width: calc(100vw - 48px);
       max-height: calc(100vh - 128px);
-      background: #08090f;
+      background: #11152A;
       border-radius: 24px;
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.08);
       z-index: 999998;
@@ -124,7 +124,7 @@
       width: 100%;
       height: 100%;
       border: none;
-      background: #08090f;
+      background: #11152A;
     }
 
     /* Tooltip */
@@ -134,7 +134,7 @@
       top: 50%;
       transform: translateY(-50%) translateX(10px);
       background: #fff;
-      color: #08090f;
+      color: #11152A;
       padding: 8px 16px;
       border-radius: 20px;
       font-family: 'Outfit', system-ui, sans-serif;
@@ -188,8 +188,8 @@
     <svg width="0" height="0" style="position:absolute;visibility:hidden;">
       <defs>
         <linearGradient id="nexa-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ff3b4d" />
-          <stop offset="100%" stop-color="#e62335" />
+          <stop offset="0%" stop-color="#4F46E5" />
+          <stop offset="100%" stop-color="#625BEE" />
         </linearGradient>
       </defs>
     </svg>

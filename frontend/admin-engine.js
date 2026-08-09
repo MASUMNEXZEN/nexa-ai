@@ -13,6 +13,53 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function bindRegisteredUserActions() {
+  const body = el('registeredUsersBody');
+  if (!body || body.dataset.actionsBound === 'true') return;
+  body.dataset.actionsBound = 'true';
+  body.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-user-action]');
+    if (!button || !body.contains(button)) return;
+    const userIndex = Number(button.dataset.userIndex);
+    const user = state.allUsers[userIndex];
+    if (!user) return;
+    const plan = ['pro', 'premium', 'admin', 'banned'].includes(user.type) ? user.type : 'free';
+    if (button.dataset.userAction === 'view') {
+      viewUser(userIndex);
+    } else if (button.dataset.userAction === 'manage') {
+      openUserModal(user.email || '', user.name || '', plan);
+    }
+  });
+}
+
+function bindAdminActions() {
+  if (document.documentElement.dataset.adminActionsBound === 'true') return;
+  document.documentElement.dataset.adminActionsBound = 'true';
+  document.addEventListener('input', (event) => {
+    if (event.target.closest('[data-admin-action="filter-users"]')) filterUsers();
+  });  document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-admin-action]');
+    if (!trigger) return;
+    const action = trigger.dataset.adminAction;
+    if (action === 'refresh') refreshAll();
+    else if (action === 'logout') logout();
+    else if (action === 'switch-tab') {
+      const allowedTabs = ['dashboard', 'subscriptions', 'plans', 'users', 'appconfig', 'push', 'telegram'];
+      if (allowedTabs.includes(trigger.dataset.tab)) switchTab(trigger.dataset.tab);
+    } else if (action === 'save-announcement') saveAnnouncement();
+    else if (action === 'update-limit') updateLimit();
+    else if (action === 'load-config') loadAppConfig();
+    else if (action === 'save-config') saveAppConfig();
+    else if (action === 'send-push') sendPush();
+    else if (action === 'open-broadcast') openBroadcast();
+    else if (action === 'send-broadcast') sendBroadcast();
+    else if (action === 'hide-modal' && trigger.dataset.modalId) hideModal(trigger.dataset.modalId);
+    else if (action === 'user-action') adminAction(trigger.dataset.action || '', trigger.dataset.plan || 'free');
+  });
+}
+
+bindAdminActions();
+
 window.onload = async () => {
   try {
     const res = await fetch('/api/admin-check.php', { credentials: 'include' });
@@ -29,6 +76,7 @@ window.onload = async () => {
     if (el('dashboard')) el('dashboard').style.display = 'block';
     // Show default dashboard tab
     if (el('tab-dashboard')) el('tab-dashboard').style.display = 'grid';
+    bindRegisteredUserActions();
     
     if (el('adminEmail')) el('adminEmail').textContent = data.email || 'Admin';
 
@@ -62,13 +110,13 @@ function initCharts() {
         datasets: [{
           label: 'Questions Answered',
           data: [],
-          borderColor: '#e62335',
-          backgroundColor: 'rgba(230, 35, 53, 0.1)',
+          borderColor: '#625BEE',
+          backgroundColor: 'rgba(98, 91, 238, 0.1)',
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: '#08090f',
-          pointBorderColor: '#e62335',
+          pointBackgroundColor: '#11152A',
+          pointBorderColor: '#625BEE',
           pointRadius: 4,
           pointBorderWidth: 2
         }]
@@ -95,7 +143,7 @@ function initCharts() {
         labels: [],
         datasets: [{
           data: [],
-          backgroundColor: ['#e62335', '#ff3b4d', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'],
+          backgroundColor: ['#625BEE', '#4F46E5', '#86A8FF', '#10b981', '#f59e0b', '#8E8BFF', '#A6A2FF', '#64748b'],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -165,8 +213,8 @@ async function fetchStats() {
             <td>${planBadge}</td>
             <td style="font-size:13px;">${escHtml(loc)}</td>
             <td style="display:flex;gap:6px;">
-              <button class="btn btn-mini" onclick="viewUser(${i})">View</button>
-              <button class="btn btn-mini" onclick="openUserModal('${escHtml(u.email)}','${escHtml(u.name||'')}','${planType}')" style="color:var(--info)">Manage</button>
+              <button class="btn btn-mini" data-user-action="view" data-user-index="${i}">View</button>
+              <button type="button" class="btn btn-mini" data-user-action="manage" data-user-index="${i}" style="color:var(--info)">Manage</button>
             </td>
           </tr>`;
         }).join('');
@@ -222,9 +270,11 @@ async function fetchTelegramUsers() {
         }
         tbody.innerHTML = data.users.map(u => {
           const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || ('User ' + u.telegram_id);
-          const userLink = u.username ? `<a href="https://t.me/${u.username}" target="_blank" style="color:var(--info);text-decoration:none;">@${u.username}</a>` : '<span style="color:var(--text-muted)">N/A</span>';
+          const username = String(u.username || '');
+          const safeUsername = /^[A-Za-z0-9_]{1,32}$/.test(username) ? username : '';
+          const userLink = safeUsername ? `<a href="https://t.me/${encodeURIComponent(safeUsername)}" target="_blank" rel="noopener noreferrer" style="color:var(--info);text-decoration:none;">@${escHtml(safeUsername)}</a>` : '<span style="color:var(--text-muted)">N/A</span>';
           return `<tr>
-            <td><strong>${escHtml(name)}</strong><br><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">ID: ${u.telegram_id}</span></td>
+            <td><strong>${escHtml(name)}</strong><br><span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">ID: ${escHtml(u.telegram_id)}</span></td>
             <td style="font-family:var(--font-mono)">${escHtml(u.phone_number) || '—'}</td>
             <td>${userLink}</td>
             <td><strong>${u.daily_queries || 0}</strong> <span style="color:var(--text-muted);font-size:12px;">/ 50</span></td>

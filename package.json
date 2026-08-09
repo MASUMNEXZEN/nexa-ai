@@ -4,8 +4,9 @@
   "private": true,
   "description": "NexA AI PHP and static frontend",
   "scripts": {
-    "check:js": "node --check frontend/nexa-app.js && node --check frontend/admin-engine.js && node --check frontend/admin-tabs.js && node --check frontend/widget.js",
+    "check:js": "node --check frontend/nexa-app.js && node --check frontend/admin-engine.js && node --check frontend/admin-tabs.js && node --check frontend/admin-login.js && node --check frontend/login.js && node --check frontend/reset.js && node --check frontend/register-sw.js && node --check frontend/sw.js && node --check frontend/widget.js",
     "check:php": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-production.ps1",
-    "check": "npm run check:js && npm run check:php"
+    "test:payment": "php scripts/test-payment-integrity.php",
+    "check": "npm run check:js && npm run check:php && npm run test:payment"
   }
 }

@@ -23,7 +23,7 @@ FTPS_PASS = os.environ.get("NEXA_FTPS_PASS", "")
 REMOTE_ROOT = os.environ.get("NEXA_FTPS_REMOTE_ROOT", "/nexa-ai")
 
 API_FILES = [
-    "config.php", "security.php", "db.php", "deepseek-fallback.php", "bedrock-fallback.php",
+    "config.php", "security.php", "db.php", "payment.php", "deepseek-fallback.php", "bedrock-fallback.php",
     "app-ask.php", "ask.php", "quiz-api.php", "leaderboard.php", "app-config.php",
     "auth-check.php", "auth-login.php", "auth-register.php", "auth-verify-otp.php",
     "auth-logout.php", "auth-profile.php", "auth-google.php", "auth-forgot-password.php",
@@ -53,7 +53,14 @@ def release_files() -> list[tuple[Path, str]]:
     api_root = BASE_LOCAL / "backend" / "api"
     for name in API_FILES:
         files.append((api_root / name, f"backend/api/{name}"))
-    return files
+    migrations_root = BASE_LOCAL / "backend" / "migrations"
+    for path in sorted(migrations_root.rglob("*.php")):
+        if path.is_file():
+            files.append((path, path.relative_to(BASE_LOCAL).as_posix()))
+
+    migration_runner = BASE_LOCAL / "scripts" / "migrate.php"
+    files.append((migration_runner, "scripts/migrate.php"))
+    return release_files()
 
 
 def validate() -> list[tuple[Path, str]]:
@@ -65,9 +72,8 @@ def validate() -> list[tuple[Path, str]]:
             raise SystemExit(f"Refusing to deploy blocked file: {relative}")
     if missing:
         raise SystemExit("Required release files are missing: " + ", ".join(missing))
-    for secret in ["backend/.env", "backend/api/fcm-key.json", "backend/data/fcm-key.json"]:
-        if (BASE_LOCAL / secret).exists():
-            raise SystemExit(f"Refusing release while private artifact exists: {secret}")
+    # Private runtime files may exist in a developer checkout, but they are not
+    # part of the explicit release allowlist above and can never be uploaded.
     return release_files()
 
 

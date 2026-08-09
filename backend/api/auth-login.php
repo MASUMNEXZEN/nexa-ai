@@ -5,7 +5,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/security.php';
 nexa_apply_security_headers('POST, OPTIONS');
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,13 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405); echo json_encode(['error' => 'Method not allowed.']); exit;
 }
 
-$rawBody = file_get_contents('php://input');
-$data    = json_decode($rawBody, true);
+$data = nexa_read_json_body(65536, 'Invalid login request.');
 
-$email    = strtolower(filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL));
+$emailInput = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 
-if (!$email || !$password) {
+if (!is_string($emailInput) || !is_string($password) || strlen($password) > 256) {
+    nexa_reject_json(400, 'Email and password required.');
+}
+$email = strtolower(trim($emailInput));
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
     http_response_code(400);
     echo json_encode(['error' => 'Email and password required.']); exit;
 }
@@ -31,11 +35,13 @@ if (!$db) {
     echo json_encode(['error' => 'Database unavailable. Please try again.']); exit;
 }
 
-$db->exec("CREATE TABLE IF NOT EXISTS login_attempts (
-    email        TEXT NOT NULL PRIMARY KEY COLLATE NOCASE,
-    attempts     INTEGER DEFAULT 0,
-    locked_until INTEGER DEFAULT 0
-)");
+if (!nexa_consume_window($db, 'auth:' . nexa_client_ip(), 900, 30)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Too many login attempts. Please try again later.']); exit;
+}
+
+
+
 
 $now          = time();
 $lockDuration = 15 * 60; // 15 minutes

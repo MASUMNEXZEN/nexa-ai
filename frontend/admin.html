@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NexA AI — Admin Command Center</title>
-  <meta name="theme-color" content="#08090f">
-  <link rel="icon" href="/logo-icon.png">
+  <meta name="theme-color" content="#11152A">
+  <link rel="icon" href="/logo-icon.png?v=5">
+  <link rel="stylesheet" href="/vendor/fonts.css">
   <link rel="stylesheet" href="/admin-style.css?v=3">
   <link rel="stylesheet" href="/admin-tabs.css?v=1">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <script src="/vendor/chart/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -20,7 +21,7 @@
   <!-- Header -->
   <header class="admin-header glass-panel" id="authHeader" style="display:none;">
     <div class="brand-wrap">
-      <img src="/logo.png?v=2" alt="NexA Logo" onerror="this.style.display='none'">
+      <img src="/logo-icon.png?v=5" alt="NexA Logo">
       <div class="brand-text">
         <h1>NexA <span>AI</span></h1>
         <div class="brand-badge">Command Center</div>
@@ -28,29 +29,29 @@
     </div>
     <div class="header-actions">
       <div class="admin-email" id="adminEmail">Connecting...</div>
-      <button class="btn" onclick="refreshAll()">↻ Refresh</button>
+      <button class="btn" data-admin-action="refresh">↻ Refresh</button>
       <a href="/api/admin-export-csv.php" class="btn" target="_blank">↓ Export</a>
-      <button class="btn" onclick="logout()">Logout</button>
+      <button class="btn" data-admin-action="logout">Logout</button>
       <a href="/" class="btn btn-primary">Live App →</a>
     </div>
   </header>
 
   <!-- Tab Navigation -->
   <nav class="tab-nav glass-panel" id="tabNav" style="display:none;">
-    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
-    <button class="tab-btn" data-tab="subscriptions" onclick="switchTab('subscriptions')">💰 Revenue</button>
-    <button class="tab-btn" data-tab="plans" onclick="switchTab('plans')">📋 Plans</button>
-    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">👥 Users</button>
-    <button class="tab-btn" data-tab="appconfig" onclick="switchTab('appconfig')">⚙️ App Config</button>
-    <button class="tab-btn" data-tab="push" onclick="switchTab('push')">📢 Push Notify</button>
-    <button class="tab-btn" data-tab="telegram" onclick="switchTab('telegram')">✈️ Telegram</button>
+    <button class="tab-btn active" data-tab="dashboard" data-admin-action="switch-tab" data-tab="dashboard">📊 Dashboard</button>
+    <button class="tab-btn" data-tab="subscriptions" data-admin-action="switch-tab" data-tab="subscriptions">💰 Revenue</button>
+    <button class="tab-btn" data-tab="plans" data-admin-action="switch-tab" data-tab="plans">📋 Plans</button>
+    <button class="tab-btn" data-tab="users" data-admin-action="switch-tab" data-tab="users">👥 Users</button>
+    <button class="tab-btn" data-tab="appconfig" data-admin-action="switch-tab" data-tab="appconfig">⚙️ App Config</button>
+    <button class="tab-btn" data-tab="push" data-admin-action="switch-tab" data-tab="push">📢 Push Notify</button>
+    <button class="tab-btn" data-tab="telegram" data-admin-action="switch-tab" data-tab="telegram">✈️ Telegram</button>
   </nav>
 
   <main id="dashboard" style="display:none;">
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: DASHBOARD                                              -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content active dashboard-grid" id="tab-dashboard">
 
       <div class="stat-card glass-panel">
@@ -73,7 +74,7 @@
       <!-- Active Users Table -->
       <div class="glass-panel card-full" style="padding:24px;">
         <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <span style="color:var(--success)">●</span> Active Students Today
+          <span style="color:var(--success)">&bull;</span> Active Students Today
         </h3>
         <div class="table-wrap">
           <table><thead><tr><th>Email</th><th>Queries</th><th>Plan</th><th>Status</th></tr></thead>
@@ -109,14 +110,14 @@
           </label>
         </div>
         <textarea id="announcementText" class="input-control" placeholder="Type a message to display at the top of the chat app..."></textarea>
-        <button class="btn btn-primary" id="saveAnnouncementBtn" onclick="saveAnnouncement()" style="margin-top:12px;width:100%;justify-content:center;">Push to Live App</button>
+        <button class="btn btn-primary" id="saveAnnouncementBtn" data-admin-action="save-announcement" style="margin-top:12px;width:100%;justify-content:center;">Push to Live App</button>
       </div>
 
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: SUBSCRIPTIONS / REVENUE                               -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content dashboard-grid" id="tab-subscriptions" style="display:none;">
 
       <div class="stat-card glass-panel">
@@ -156,18 +157,18 @@
 
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: SUBSCRIPTION PLANS                                     -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-plans" style="display:none;">
       <div class="plans-grid" id="plansGrid">
         <div style="color:var(--text-muted);text-align:center;padding:40px;">Loading plans...</div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: USERS                                                  -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-users" style="display:none;">
       <div class="glass-panel" style="padding:24px;margin-bottom:24px;">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
@@ -175,11 +176,11 @@
             <h3 style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Daily Limit (Free)</h3>
             <div class="input-group" style="margin:0;padding:0;">
               <input type="number" id="newLimitInput" class="input-control" min="1" placeholder="Set Limit">
-              <button class="btn btn-primary" onclick="updateLimit()">Save</button>
+              <button class="btn btn-primary" data-admin-action="update-limit">Save</button>
             </div>
           </div>
           <div style="flex:1;min-width:200px;">
-            <input type="text" id="userSearch" class="input-control" placeholder="🔍 Search user by email..." oninput="filterUsers()">
+            <input type="text" id="userSearch" class="input-control" placeholder="🔍 Search user by email..." data-admin-action="filter-users">
           </div>
         </div>
       </div>
@@ -199,9 +200,9 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: APP CONFIG                                             -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-appconfig" style="display:none;">
       <div class="config-grid">
 
@@ -283,16 +284,16 @@
         </div>
 
         <div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:12px;">
-          <button class="btn" onclick="loadAppConfig()">↻ Reset</button>
-          <button class="btn btn-primary" onclick="saveAppConfig()">💾 Save All Config</button>
+          <button class="btn" data-admin-action="load-config">↻ Reset</button>
+          <button class="btn btn-primary" data-admin-action="save-config">💾 Save All Config</button>
         </div>
 
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: PUSH NOTIFICATIONS                                     -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-push" style="display:none;">
       <div class="glass-panel" style="padding:32px;max-width:700px;margin:0 auto;">
         <h3 style="font-size:18px;font-weight:700;margin-bottom:24px;">📢 Send Push Notification</h3>
@@ -319,14 +320,14 @@
           <input type="email" id="pushEmail" class="input-control" style="margin-top:12px;display:none;" placeholder="user@example.com">
         </div>
 
-        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="sendPush()">🚀 Send Push Notification</button>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" data-admin-action="send-push">🚀 Send Push Notification</button>
         <div id="pushResult" style="margin-top:16px;font-size:14px;text-align:center;color:var(--text-muted);"></div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: TELEGRAM                                               -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-telegram" style="display:none;">
       <div class="glass-panel card-full" style="padding:24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
@@ -335,7 +336,7 @@
             <span class="badge badge-info" id="totalTelegramUsers" style="font-family:var(--font-mono)">0 TOTAL</span>
           </h3>
           <div style="display:flex;gap:12px;">
-            <button class="btn" onclick="openBroadcast()" style="color:var(--info);border-color:rgba(59,130,246,0.3)">Broadcast Message</button>
+            <button class="btn" data-admin-action="open-broadcast" style="color:var(--info);border-color:rgba(59,130,246,0.3)">Broadcast Message</button>
             <a href="/api/admin-export-telegram-csv.php" target="_blank" class="btn">Export Data</a>
           </div>
         </div>
@@ -351,18 +352,18 @@
   <!-- MODALS -->
   <div class="modal-overlay" id="userProfileModal">
     <div class="modal-card glass-panel">
-      <button class="modal-close" onclick="hideModal('userProfileModal')">×</button>
+      <button class="modal-close" data-admin-action="hide-modal" data-modal-id="userProfileModal">&times;</button>
       <div class="modal-header">
         <div class="modal-header-icon" id="pmAvatar">?</div>
         <div><div class="modal-title" id="pmName">Name</div><div class="modal-subtitle" id="pmEmail">Email</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="btn" style="color:var(--success);border-color:rgba(16,185,129,0.3)" onclick="adminAction('upgrade','pro')">⬆ Set Pro</button>
-        <button class="btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="adminAction('upgrade','premium')">👑 Set Premium</button>
-        <button class="btn" onclick="adminAction('downgrade','free')">⬇ Set Free</button>
-        <button class="btn" onclick="adminAction('reset_count','')">🔄 Reset Count</button>
-        <button class="btn" onclick="adminAction('grant_bonus','')" style="color:var(--info)">+10 Bonus</button>
-        <button class="btn" style="color:var(--accent)" onclick="adminAction('ban','')">🚫 Ban</button>
+        <button class="btn" style="color:var(--success);border-color:rgba(16,185,129,0.3)" data-admin-action="user-action" data-action="upgrade" data-plan="pro">⬆ Set Pro</button>
+        <button class="btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" data-admin-action="user-action" data-action="upgrade" data-plan="premium">👑 Set Premium</button>
+        <button class="btn" data-admin-action="user-action" data-action="downgrade" data-plan="free">⬇ Set Free</button>
+        <button class="btn" data-admin-action="user-action" data-action="reset_count" data-plan="free">🔄 Reset Count</button>
+        <button class="btn" data-admin-action="user-action" data-action="grant_bonus" data-plan="free" style="color:var(--info)">+10 Bonus</button>
+        <button class="btn" style="color:var(--accent)" data-admin-action="user-action" data-action="ban" data-plan="free">🚫 Ban</button>
       </div>
       <div class="modal-grid">
         <div class="modal-field"><div class="modal-label">Plan</div><div class="modal-value badge badge-neutral" id="pmType">FREE</div></div>
@@ -376,13 +377,13 @@
 
   <div class="modal-overlay" id="broadcastModal">
     <div class="modal-card glass-panel">
-      <button class="modal-close" onclick="hideModal('broadcastModal')">×</button>
+      <button class="modal-close" data-admin-action="hide-modal" data-modal-id="broadcastModal">&times;</button>
       <div class="modal-header">
         <div class="modal-header-icon" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">📢</div>
         <div><div class="modal-title">Telegram Broadcast</div><div class="modal-subtitle">Mass message to all bot subscribers</div></div>
       </div>
       <textarea id="broadcastMessage" class="input-control" placeholder="Type your broadcast... Markdown *bold* and _italic_ supported." style="margin-bottom:16px;"></textarea>
-      <button id="sendBroadcastBtn" class="btn btn-primary" style="width:100%;justify-content:center;" onclick="sendBroadcast()">Dispatch Broadcast</button>
+      <button id="sendBroadcastBtn" class="btn btn-primary" style="width:100%;justify-content:center;" data-admin-action="send-broadcast">Dispatch Broadcast</button>
     </div>
   </div>
 
@@ -392,4 +393,3 @@
   <script src="/admin-tabs.js?v=1"></script>
 </body>
 </html>
-

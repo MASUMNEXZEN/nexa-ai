@@ -15,13 +15,21 @@ There is no production code in a legacy or diagnostic directory. Historical file
 
 1. Copy `.env.example` to `.env` in this directory.
 2. Set `GEMINI_API_KEY` for live AI responses and keep all secrets out of the frontend.
-3. From the repository root, run:
+3. Apply the protected migrations from the repository root:
+
+```powershell
+php scripts/migrate.php
+```
+
+The runner creates a private backup before changing an existing database. It is CLI-only and is denied by the web server.
+
+4. From the repository root, run:
 
 ```powershell
 .\scripts\start-local.ps1
 ```
 
-4. Open <http://localhost:8000/>.
+5. Open <http://localhost:8000/>.
 
 For Google sign-in, register these exact OAuth JavaScript origins on the configured web client:
 

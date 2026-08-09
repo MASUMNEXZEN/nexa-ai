@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'upgrade' || $action === 'downgrade') {
         // Get plan info
-        $plan = $db->prepare("SELECT * FROM subscription_plans WHERE name = ?");
+        $plan = $db->prepare("SELECT name, daily_limit FROM subscription_plans WHERE name = ?");
         $plan->execute([$planName]);
         $plan = $plan->fetch();
         if (!$plan) { http_response_code(404); echo json_encode(['error' => 'Plan not found']); exit; }
@@ -104,7 +104,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => "Unknown action: {$action}"]);
     }
 }
-
-
-
-

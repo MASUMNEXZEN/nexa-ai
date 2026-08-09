@@ -4,7 +4,7 @@ nexa_apply_security_headers('GET, POST, OPTIONS');
 // Auth: SQLite-first (no password-resets.json dependency)
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -13,17 +13,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); echo json_
 
 $data        = json_decode(file_get_contents('php://input'), true);
 $email       = strtolower(filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL));
-$otp         = preg_replace('/\D/', '', $data['otp'] ?? '');
+$otp         = preg_replace('/\D/', '', (string)($data['otp'] ?? ''));
 $newPassword = $data['new_password'] ?? '';
 
-if (!$email || !$otp || !$newPassword) {
+if (!$email || !preg_match('/^\d{6}$/', $otp) || !is_string($newPassword) || $newPassword === '') {
     http_response_code(400);
     echo json_encode(['error' => 'All fields are required.']); exit;
 }
 
-if (strlen($newPassword) < 6) {
+if (strlen($newPassword) < 8 || !preg_match('/[A-Z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Password must be at least 6 characters.']); exit;
+    echo json_encode(['error' => 'Password must be at least 8 characters with one uppercase letter and one number.']); exit;
 }
 
 $db = get_db_connection();
@@ -33,7 +33,7 @@ if (!$db) {
 }
 
 // Fetch reset record from SQLite
-$stmt = $db->prepare("SELECT otp, attempts, created_at FROM password_resets WHERE email = ? LIMIT 1");
+$stmt = $db->prepare("SELECT otp_hash, attempts, created_at FROM password_resets WHERE email = ? LIMIT 1");
 $stmt->execute([$email]);
 $record = $stmt->fetch();
 
@@ -57,7 +57,7 @@ if ((int)$record['attempts'] >= 5) {
 }
 
 // Verify OTP
-if ($record['otp'] !== $otp) {
+if (empty($record['otp_hash']) || !password_verify($otp, $record['otp_hash'])) {
     $db->prepare("UPDATE password_resets SET attempts = attempts + 1 WHERE email = ?")->execute([$email]);
     $left = 5 - ((int)$record['attempts'] + 1);
     http_response_code(401);
@@ -76,8 +76,17 @@ if ($stmt->rowCount() === 0) {
 // Clean up the used OTP
 $db->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$email]);
 
-// Auto-login
+// Rotate both the session and persistent login token after a password reset.
+$token = nexa_issue_persistent_token($db, $email);
+session_regenerate_id(true);
 $_SESSION['user_email'] = $email;
+setcookie('nexa_token', $token, [
+    'expires' => time() + (60 * 60 * 24 * 30),
+    'path' => '/',
+    'secure' => NEXA_COOKIE_SECURE,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 
 echo json_encode(['success' => true, 'message' => 'Password reset successful!']);
 

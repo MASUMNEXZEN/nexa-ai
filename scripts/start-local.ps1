@@ -4,6 +4,9 @@ Set-Location $root
 if (-not (Test-Path 'backend/.env')) {
     throw 'Missing backend/.env. Copy backend/.env.example to backend/.env and configure local values first.'
 }
+Write-Host 'Applying database migrations...'
+& php (Join-Path $root 'scripts/migrate.php')
+if ($LASTEXITCODE -ne 0) { throw 'Database migration failed; local server was not started.' }
 Write-Host 'NexA AI local server: http://localhost:8000'
 Write-Host 'Press Ctrl+C to stop.'
 php -S localhost:8000 -t . scripts/local-router.php

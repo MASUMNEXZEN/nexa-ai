@@ -5,7 +5,7 @@ error_reporting(0); ini_set('display_errors', '0');
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -55,5 +55,3 @@ if ($db) {
 }
 
 echo json_encode(['success' => true]);
-
-

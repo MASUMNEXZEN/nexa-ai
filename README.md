@@ -38,10 +38,12 @@ The local configuration disables the sandbox-only outbound proxy. Production nev
 ```powershell
 npm run check
 python -m py_compile deploy_all.py
+.\scripts\smoke-local.ps1
+php scripts/migrate.php --dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-release.ps1
 ```
 
-`npm run check` validates the canonical JavaScript and production PHP allowlist. The release verifier must be run from a clean release environment without `.env`, keys, databases, logs, or diagnostic dumps.
+`npm run check` validates the canonical JavaScript, production PHP allowlist, database migrations, and offline payment integrity suite. The release verifier must be run from a clean release environment without `.env`, keys, databases, logs, or diagnostic dumps.
 
 ## Production deployment
 
@@ -52,7 +54,7 @@ Before release:
 - Configure production secrets through the server environment or `backend/.env` outside the web root.
 - Set `NEXA_APP_ENV=production`, `NEXA_COOKIE_SECURE=1`, and the exact production `NEXA_ALLOWED_ORIGINS`.
 - Register the production Google OAuth JavaScript origin and redirect configuration.
-- Run database migrations/backup procedures before serving traffic.
+- Run `php scripts/migrate.php` on the host before serving traffic. It creates a private SQLite backup before applying pending changes.
 - Run the release verifier and post-deploy smoke checks.
 
 ## Security rules

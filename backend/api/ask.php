@@ -1,8 +1,11 @@
-register_shutdown_function(function() {
+register_shutdown_function(function (): void {
     $e = error_get_last();
-    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        $msg = date('Y-m-d H:i:s') . " FATAL: {$e['message']} in {$e['file']}:{$e['line']}\n";
-        file_put_contents(__DIR__ . '/../data/crash_log.txt', $msg, FILE_APPEND);
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true) && function_exists('nexa_log_event')) {
+        nexa_log_event('chat_fatal_error', [
+            'severity' => (int)$e['type'],
+            'file' => basename((string)$e['file']),
+            'line' => (int)$e['line'],
+        ]);
     }
 });
 try {
@@ -27,19 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int)$_SERVER['CONTENT_LENGTH'] : 0;
-if ($contentLength > 15000000) {
-    http_response_code(413);
-    echo json_encode(['error' => 'Request too large. Max file size is ~10 MB.']);
-    exit;
-}
-
-$rawBody = file_get_contents('php://input');
-$body = json_decode($rawBody, true) ?: [];
+$body = nexa_read_json_body(15000000, 'Invalid request body.');
 
 require_once __DIR__ . '/db.php';
 
-session_start();
+nexa_start_session();
 $userEmail = null;
 $isAppMode = !empty($body['app_mode']);
 
@@ -91,6 +86,11 @@ if (!$body || !isset($body['contents']) || !is_array($body['contents'])) {
     exit;
 }
 
+$validationError = nexa_validate_ai_request($body);
+if ($validationError !== null) {
+    nexa_reject_json(400, $validationError);
+}
+
 if ($pdo) {
     $pdo->prepare("INSERT OR IGNORE INTO daily_stats (date, count) VALUES (?, 0)")->execute([$today]);
     $pdo->prepare("UPDATE daily_stats SET count = count + 1 WHERE date = ?")->execute([$today]);
@@ -125,11 +125,11 @@ if ($pdo) {
 $normalizedQ = strtolower(trim($userQuestionFull));
 $normalizedQ = (string)preg_replace('/\s+/', ' ', $normalizedQ);
 $sysTextForCache = $body['system_instruction']['parts'][0]['text'] ?? '';
-$qHash = md5($normalizedQ . '|' . $sysTextForCache);
+$qHash = md5(NEXA_RESPONSE_CACHE_VERSION . '|' . $normalizedQ . '|' . $sysTextForCache);
 
 $cachedResponse = null;
 $cacheDb = get_cache_db();
-if ($cacheDb) {
+if (NEXA_CHAT_RESPONSE_CACHE_ENABLED && $cacheDb) {
     try {
         $stmt = $cacheDb->prepare("SELECT answer FROM cache_responses WHERE q_hash = ? LIMIT 1");
         $stmt->execute([$qHash]);
@@ -139,7 +139,7 @@ if ($cacheDb) {
 
 if ($cachedResponse) {
     header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Connection: keep-alive');
     header('X-Accel-Buffering: no');
 
@@ -197,7 +197,7 @@ while (ob_get_level() > 0) {
 }
 
 header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
+header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); 
 
@@ -262,7 +262,7 @@ curl_setopt_array($ch, [
 nexa_configure_curl($ch);
 
 curl_exec($ch);
-$curlError = curl_error($ch);
+
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
@@ -277,13 +277,20 @@ if ($httpCode === 200) {
     }
     // Only cache if response is substantial and does not look like an error (bug fix: prevents caching bad responses)
     $isErrorResponse = stripos($fullResponse, 'error') !== false && strlen($fullResponse) < 200;
-    if (!$isImageRequest && strlen($fullResponse) > 50 && !$isErrorResponse && $cacheDb) {
+    if (NEXA_CHAT_RESPONSE_CACHE_ENABLED && !$isImageRequest && strlen($fullResponse) > 50 && !$isErrorResponse && $cacheDb) {
         try {
             $cacheDb->prepare("INSERT OR IGNORE INTO cache_responses (q_hash, question, answer) VALUES (?, ?, ?)")
                     ->execute([$qHash, $userQuestionFull, $fullResponse]);
         } catch (Exception $e) {}
     }
 } else {
+    if (function_exists('nexa_log_event')) {
+        nexa_log_event('chat_provider_failed', [
+            'provider' => 'gemini',
+            'status_class' => $httpCode > 0 ? 'http_failure' : 'network_failure',
+            'status_code' => (int)$httpCode,
+        ]);
+    }
     $fallbackResult = fallback_to_deepseek($body, $qHash, $userQuestion, $userEmail, $cacheDb, $maxTokens);
     if (!$fallbackResult) {
         http_response_code($httpCode ?: 500);
@@ -293,8 +300,13 @@ if ($httpCode === 200) {
 
 exit;
 } catch (Throwable $crashEx) {
-    $msg = date('Y-m-d H:i:s') . " EXCEPTION: {$crashEx->getMessage()} in {$crashEx->getFile()}:{$crashEx->getLine()}\n";
-    file_put_contents(__DIR__ . '/../data/crash_log.txt', $msg, FILE_APPEND);
+    if (function_exists('nexa_log_event')) {
+        nexa_log_event('chat_unhandled_exception', [
+            'exception_class' => get_class($crashEx),
+            'file' => basename($crashEx->getFile()),
+            'line' => $crashEx->getLine(),
+        ]);
+    }
     http_response_code(500);
     echo json_encode(['error' => 'Internal server error. Please try again.']);
     exit;
