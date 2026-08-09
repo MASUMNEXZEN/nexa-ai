@@ -2,6 +2,7 @@
 require_once __DIR__ . '/security.php';
 nexa_apply_security_headers('GET, POST, OPTIONS');
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate');
 
 // Handle CORS preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -9,23 +10,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Write all PHP errors to a log file (bypasses Apache ErrorDocument 500 redirect)
-$logFile = __DIR__ . '/../data/quiz-error.log';
-ini_set('log_errors', 1);
-ini_set('error_log', $logFile);
-ini_set('display_errors', 0);
-set_error_handler(function($errno, $errstr, $errfile, $errline) use ($logFile) {
-    file_put_contents($logFile, date('[Y-m-d H:i:s] ') . "PHP Error[$errno]: $errstr in $errfile:$errline\n", FILE_APPEND);
+ini_set('display_errors', '0');
+set_error_handler(function (int $severity, string $message, string $file, int $line): bool {
+    nexa_log_event('quiz_php_warning', [
+        'severity' => $severity,
+        'file' => basename($file),
+        'line' => $line,
+    ]);
+    return false;
 });
-register_shutdown_function(function() use ($logFile) {
+register_shutdown_function(function (): void {
     $e = error_get_last();
-    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        file_put_contents($logFile, date('[Y-m-d H:i:s] ') . "FATAL: {$e['message']} in {$e['file']}:{$e['line']}\n", FILE_APPEND);
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        nexa_log_event('quiz_fatal_error', [
+            'severity' => (int)$e['type'],
+            'file' => basename((string)$e['file']),
+            'line' => (int)$e['line'],
+        ]);
     }
 });
 
 require_once __DIR__ . '/config.php';
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+nexa_start_session();
 require_once __DIR__ . '/db.php';
 
 $mainDb = get_db();
@@ -86,6 +92,55 @@ if ($body['action'] === 'get_quiz') {
     $count = $limitResult['count'];
 }
 
+
+/**
+ * Normalize and reject malformed AI-generated quiz items before they reach
+ * the database or the student. A weak item fails closed and triggers a fresh
+ * generation on the next request.
+ */
+function nexa_quiz_key($value): string {
+    $value = trim((string)$value);
+    return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+}
+
+function nexa_normalize_quiz_item($item): ?array {
+    if (!is_array($item)) return null;
+
+    $question = trim((string)($item['question'] ?? ''));
+    $options = [];
+    foreach (['opt_a', 'opt_b', 'opt_c', 'opt_d'] as $key) {
+        $value = trim((string)($item[$key] ?? ''));
+        if ($value === '' || strlen($value) > 300) return null;
+        $options[$key] = $value;
+    }
+
+    $explanation = trim((string)($item['explanation'] ?? ''));
+    $subTopic = trim((string)($item['sub_topic'] ?? ''));
+    if (strlen($question) < 8 || strlen($question) > 600 || strlen($explanation) < 20 || strlen($explanation) > 1200) return null;
+
+    $optionKeys = array_keys($options);
+    $optionValues = array_map('nexa_quiz_key', array_values($options));
+    if (count(array_unique($optionValues)) !== 4) return null;
+
+    $badContent = $question . ' ' . implode(' ', $options) . ' ' . $explanation;
+    if (preg_match('/\b(lorem ipsum|test question|sample question|dummy question|option a|option b|undefined|null)\b/i', $badContent)) return null;
+
+    $correct = strtoupper(trim((string)($item['correct_answer'] ?? '')));
+    if (!in_array($correct, ['A', 'B', 'C', 'D'], true)) {
+        $correctKey = nexa_quiz_key($item['correct_answer'] ?? '');
+        $match = array_search($correctKey, $optionValues, true);
+        if ($match === false) return null;
+        $correct = $optionKeys[$match] === 'opt_a' ? 'A' : ($optionKeys[$match] === 'opt_b' ? 'B' : ($optionKeys[$match] === 'opt_c' ? 'C' : 'D'));
+    }
+
+    $item['question'] = $question;
+    foreach ($options as $key => $value) $item[$key] = $value;
+    $item['correct_answer'] = $correct;
+    $item['explanation'] = $explanation;
+    $item['sub_topic'] = $subTopic;
+    return $item;
+}
+
 if ($body['action'] === 'get_quiz') {
     $topic = trim($body['topic'] ?? 'General Knowledge');
     $difficulty = trim($body['difficulty'] ?? 'Moderate');
@@ -120,14 +175,32 @@ if ($body['action'] === 'get_quiz') {
     }
 
 
-    $stmt = $cacheDb->prepare("
-        SELECT * FROM quizzes 
-        WHERE topic LIKE ? AND difficulty = ? AND lang = ?
-        AND id NOT IN (SELECT quiz_id FROM user_quiz_history WHERE user_email = ?)
-        ORDER BY RANDOM() LIMIT 1
-    ");
-    $stmt->execute(['%'.$topic.'%', $difficulty, $lang, $userEmail]);
-    $cachedQuiz = $stmt->fetch();
+    // Never serve legacy rows in the normal product flow. Reuse is opt-in and
+    // additionally scoped by topic, exam, language, difficulty, and version.
+    // Every cache candidate passes the same quality gate as fresh model output.
+    $cachedQuiz = null;
+    if (NEXA_QUIZ_CACHE_ENABLED) {
+        $stmt = $cacheDb->prepare("
+            SELECT id, topic, difficulty, lang, question, opt_a, opt_b, opt_c, opt_d,
+                   correct_answer, explanation, sub_topic, exam_type, cache_version, created_at
+            FROM quizzes
+            WHERE topic = ? AND difficulty = ? AND lang = ? AND exam_type = ?
+              AND cache_version = ?
+              AND id NOT IN (SELECT quiz_id FROM user_quiz_history WHERE user_email = ?)
+            ORDER BY created_at DESC, id DESC
+            LIMIT 24
+        ");
+        $stmt->execute([$topic, $difficulty, $lang, $examType, NEXA_QUIZ_CACHE_VERSION, $userEmail]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $candidate) {
+            if (nexa_normalize_quiz_item($candidate)) {
+                $cachedQuiz = $candidate;
+                break;
+            }
+        }
+        if (!$cachedQuiz) {
+            nexa_log_event('quiz_cache_miss', ['reason' => 'no_quality_candidate']);
+        }
+    }
 
     if ($cachedQuiz) {
         $cacheDb->prepare("INSERT INTO user_quiz_history (user_email, quiz_id, user_answer, is_correct) VALUES (?, ?, '', 0)")
@@ -135,7 +208,7 @@ if ($body['action'] === 'get_quiz') {
 
         echo json_encode([
             'success'   => true,
-            'source'    => 'db',
+            'source'    => 'cache',
             'quiz'      => $cachedQuiz,
             'remaining' => $remaining,
             'limit'     => $maxLimit
@@ -143,9 +216,22 @@ if ($body['action'] === 'get_quiz') {
         exit;
     }
 
-    $langInstruction = "Write ENTIRELY in " . ($lang === 'Bengali' ? 'Bengali (বাংলা)' : 'English');
-    $sharedPrompt    = "Generate 3 unique MCQ questions about '{$topic}' at '{$difficulty}' difficulty for students preparing for {$examType}. Return a JSON array of exactly 3 objects, each with keys: question, sub_topic, opt_a, opt_b, opt_c, opt_d, correct_answer (must be A/B/C/D), explanation.";
-    $sharedSystem    = "{$examContext}\nRULES:\n1. {$langInstruction}\n2. Difficulty: {$difficulty} appropriate for {$examType}.\n3. Strictly relevant to '{$topic}'.\n4. Return ONLY a JSON array - no markdown fences, no extra text.";
+    $langInstruction = "Write ENTIRELY in " . ($lang === 'Bengali' ? 'Bengali' : 'English');
+    $quizCacheVersion = NEXA_QUIZ_CACHE_VERSION;
+    $variationSeed = bin2hex(random_bytes(6));
+
+    // Exclude only current-version questions. Legacy rows are intentionally
+    // invisible to the generation loop and cannot contaminate new content.
+    $recentQuestions = [];
+    $recentStmt = $cacheDb->prepare("SELECT question FROM quizzes WHERE topic = ? AND difficulty = ? AND lang = ? AND exam_type = ? AND cache_version = ? ORDER BY id DESC LIMIT 16");
+    $recentStmt->execute([$topic, $difficulty, $lang, $examType, $quizCacheVersion]);
+    foreach ($recentStmt->fetchAll(PDO::FETCH_COLUMN) as $priorQuestion) {
+        $recentQuestions[] = '- ' . trim((string)$priorQuestion);
+    }
+    $exclusionText = $recentQuestions ? "\nDo not repeat these previously generated questions:\n" . implode("\n", $recentQuestions) : '';
+
+    $sharedPrompt = "Create a fresh set of exactly 3 high-quality, exam-standard MCQs about '{$topic}' at '{$difficulty}' difficulty for {$examType}. Generation key: {$variationSeed}. Each question must test a meaningful concept, have one unambiguous correct answer, and use plausible distractors rather than obvious or silly options. Avoid generic trivia, filler, copied textbook openings, and repeated wording. Return a JSON array of exactly 3 objects with keys: question, sub_topic, opt_a, opt_b, opt_c, opt_d, correct_answer (must be A/B/C/D), explanation." . $exclusionText;
+    $sharedSystem = "{$examContext}\nRULES:\n1. {$langInstruction}.\n2. Difficulty must be genuinely appropriate for {$examType}, not basic warm-up trivia.\n3. Stay strictly within '{$topic}' and the stated exam syllabus.\n4. Use clear, natural language and verify the answer before returning it.\n5. Return ONLY a JSON array - no markdown fences, no extra text.";
 
     session_write_close(); // Unlock session before long API wait
     set_time_limit(65);    // Give PHP enough time for slower providers
@@ -190,7 +276,7 @@ if ($body['action'] === 'get_quiz') {
         curl_close($ch);
 
         if (!$resp || $err || $code !== 200) {
-            return ['error' => "HTTP {$code}: " . ($err ?: substr($resp, 0, 300)), 'questions' => null, 'tokens' => [0, 0]];
+            return ['error' => true, 'questions' => null, 'tokens' => [0, 0]];
         }
         $data    = json_decode($resp, true);
         $rawText = $data['choices'][0]['message']['content'] ?? '';
@@ -231,8 +317,10 @@ if ($body['action'] === 'get_quiz') {
             $usedTokens = $dsResult['tokens'];
             $source     = 'deepseek';
         } else {
-            file_put_contents(DATA_DIR . 'quiz-error.log',
-                date('[Y-m-d H:i:s] ') . "DeepSeek failed: {$dsResult['error']}\n", FILE_APPEND);
+            nexa_log_event('quiz_provider_failed', [
+                'provider' => 'deepseek',
+                'status_class' => 'failure',
+            ]);
         }
     }
 
@@ -285,22 +373,28 @@ if ($body['action'] === 'get_quiz') {
         curl_close($ch);
 
         if ($geminiResp === false || $geminiErr) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Network error reaching AI.', 'curl_error' => $geminiErr]);
-            exit;
+            nexa_log_event('quiz_provider_failed', [
+                'provider' => 'gemini',
+                'status_class' => 'network_failure',
+            ]);
+            nexa_safe_error(503, 'PROVIDER_UNAVAILABLE', 'Quiz generation is temporarily unavailable. Please try again.');
         }
         if ($geminiCode !== 200) {
-            $errBody = json_decode($geminiResp, true);
-            http_response_code(500);
-            echo json_encode(['error' => 'AI API error.', 'details' => $errBody['error']['message'] ?? $geminiResp, 'http_code' => $geminiCode]);
-            exit;
+            nexa_log_event('quiz_provider_failed', [
+                'provider' => 'gemini',
+                'status_class' => 'http_failure',
+                'status_code' => (int)$geminiCode,
+            ]);
+            nexa_safe_error(503, 'PROVIDER_UNAVAILABLE', 'Quiz generation is temporarily unavailable. Please try again.');
         }
 
         $gemResData = json_decode($geminiResp, true);
         if (!$gemResData || !isset($gemResData['candidates'][0]['content']['parts'][0]['text'])) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Empty Gemini response.', 'raw' => substr($geminiResp, 0, 300)]);
-            exit;
+            nexa_log_event('quiz_provider_invalid_response', [
+                'provider' => 'gemini',
+                'status_class' => 'missing_content',
+            ]);
+            nexa_safe_error(502, 'PROVIDER_INVALID_RESPONSE', 'The AI returned an incomplete quiz. Please try again.');
         }
 
         $gemUsage   = $gemResData['usageMetadata'] ?? [];
@@ -310,21 +404,44 @@ if ($body['action'] === 'get_quiz') {
         $gemRawText = preg_replace('/^```(?:json)?\s*/i', '', trim($gemRawText));
         $gemRawText = preg_replace('/```\s*$/i', '', trim($gemRawText));
         
-        // Log Gemini raw output explicitly if we suspect it's failing
         $qArray = json_decode($gemRawText, true);
 
         if (!is_array($qArray) || empty($qArray)) {
-            file_put_contents(DATA_DIR . 'debug_gem_' . time() . '.txt', $gemRawText);
-            http_response_code(500);
-            echo json_encode(['error' => 'Malformed Gemini response.', 'raw' => substr($gemRawText, 0, 300)]);
-            exit;
+            nexa_log_event('quiz_provider_invalid_response', [
+                'provider' => 'gemini',
+                'status_class' => 'malformed_json',
+            ]);
+            nexa_safe_error(502, 'PROVIDER_INVALID_RESPONSE', 'The AI returned an invalid quiz. Please try again.');
         }
     }
 
 
+
+    // Validate every model item before persistence or display. Bad model output
+    // must never become tomorrow's cached question.
+    $validatedQuestions = [];
+    $seenQuestionKeys = [];
+    foreach (array_slice(is_array($qArray) ? $qArray : [], 0, 6) as $rawQuestion) {
+        $normalizedQuestion = nexa_normalize_quiz_item($rawQuestion);
+        if (!$normalizedQuestion) continue;
+        $questionKey = nexa_quiz_key($normalizedQuestion['question']);
+        if (isset($seenQuestionKeys[$questionKey])) continue;
+        $seenQuestionKeys[$questionKey] = true;
+        $validatedQuestions[] = $normalizedQuestion;
+        if (count($validatedQuestions) === 3) break;
+    }
+    if (count($validatedQuestions) !== 3) {
+        nexa_log_event('quiz_quality_rejected', [
+            'provider' => $source,
+            'status_class' => 'insufficient_valid_items',
+        ]);
+        nexa_safe_error(502, 'QUIZ_QUALITY_REJECTED', 'The AI returned an incomplete question set. Please try again.');
+    }
+    $qArray = $validatedQuestions;
+
     log_nexa_usage($userEmail, 'quiz_' . $source, $usedTokens[0], $usedTokens[1]);
 
-    $insertQ  = $cacheDb->prepare("INSERT INTO quizzes (topic, difficulty, lang, question, opt_a, opt_b, opt_c, opt_d, correct_answer, explanation, sub_topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $insertQ  = $cacheDb->prepare("INSERT INTO quizzes (topic, difficulty, lang, question, opt_a, opt_b, opt_c, opt_d, correct_answer, explanation, sub_topic, exam_type, cache_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $checkQ   = $cacheDb->prepare("SELECT id FROM quizzes WHERE question = ? LIMIT 1");
     $firstQuiz = null;
 
@@ -335,12 +452,14 @@ if ($body['action'] === 'get_quiz') {
         try {
             $insertQ->execute([$topic, $difficulty, $lang,
                 $q['question'], $q['opt_a'], $q['opt_b'], $q['opt_c'], $q['opt_d'],
-                strtoupper($q['correct_answer']), $q['explanation'], $q['sub_topic'] ?? $topic]);
+                $q['correct_answer'], $q['explanation'], $q['sub_topic'] ?? $topic, $examType, $quizCacheVersion]);
             if (!$firstQuiz) {
                 $q['id']         = $cacheDb->lastInsertId();
                 $q['topic']      = $topic;
                 $q['difficulty'] = $difficulty;
                 $q['lang']       = $lang;
+                $q['exam_type']  = $examType;
+                $q['cache_version'] = $quizCacheVersion;
                 $firstQuiz       = $q;
             }
         } catch (Exception $e) {}
@@ -356,9 +475,11 @@ if ($body['action'] === 'get_quiz') {
             'question'       => $q['question'],
             'opt_a'          => $q['opt_a'],          'opt_b' => $q['opt_b'],
             'opt_c'          => $q['opt_c'],          'opt_d' => $q['opt_d'],
-            'correct_answer' => strtoupper($q['correct_answer']),
+            'correct_answer' => $q['correct_answer'],
             'explanation'    => $q['explanation'],
             'sub_topic'      => $q['sub_topic'] ?? $topic,
+            'exam_type'      => $examType,
+            'cache_version'  => $quizCacheVersion,
         ];
     }
 
@@ -385,5 +506,3 @@ if ($body['action'] === 'submit_answer') {
 }
 
 echo json_encode(['error' => 'Invalid action.']);
-
-

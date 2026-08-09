@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NexA AI — Secure Admin Login</title>
-  <meta name="theme-color" content="#08090f">
+  <meta name="theme-color" content="#F7F8FC">
   
-  <link rel="icon" href="/logo-icon.png">
-  <link rel="stylesheet" href="/admin-style.css?v=2">
+  <link rel="icon" href="/logo-icon.png?v=5">
+  <link rel="stylesheet" href="/vendor/fonts.css?v=2">
+  <link rel="stylesheet" href="/admin-style.css?v=5">
   <style>
     body {
       display: flex; align-items: center; justify-content: center;
@@ -44,13 +45,22 @@
     
     .back-link { display: block; text-align: center; margin-top: 24px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; transition: 0.2s; }
     .back-link:hover { color: #fff; }
+    /* Nexa reference direction: admin auth mirrors the light product shell. */
+    body { background: #F7F8FC; background-image: radial-gradient(circle at 82% 0%, rgba(142,139,255,.14), transparent 30rem); }
+    .login-card { padding: 42px; }
+    .brand img { background: #FFFFFF !important; filter: drop-shadow(0 8px 20px rgba(98,91,238,.15)) !important; }
+    .brand h2 { color: #1B2430; }
+    .form-control { background: #F8F9FC; border-color: #E2E5ED; color: #1B2430; }
+    .form-control:focus { background: #FFFFFF; box-shadow: 0 0 0 4px rgba(98,91,238,.10); }
+    .eye-btn { color: #1B2430; }
+    .back-link:hover { color: #625BEE; }
   </style>
 </head>
 <body>
 
   <div class="login-card glass-panel">
     <div class="brand">
-      <img src="/logo.png?v=2" alt="NexA Logo" style="height:56px;width:auto;border-radius:12px;background:rgba(0,0,0,0.6);padding:6px;box-shadow:0 0 24px rgba(230,35,53,0.3);" onerror="this.style.display='none'">
+      <img src="/logo-icon.png?v=5" alt="NexA Logo" style="height:56px;width:auto;border-radius:12px;background:rgba(0,0,0,0.6);padding:6px;box-shadow:0 0 24px rgba(98,91,238,0.3);">
       <h2>Restricted Access</h2>
       <p>NexA AI Platform Administration</p>
     </div>
@@ -59,7 +69,7 @@
       <label class="form-label">Admin Identity</label>
       <div class="input-wrapper">
         <span class="input-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-        <input type="email" id="loginEmail" class="form-control" placeholder="admin@domain.com" autocomplete="email" onkeydown="if(event.key==='Enter') doLogin()">
+        <input type="email" id="loginEmail" class="form-control" placeholder="admin@domain.com" autocomplete="email">
       </div>
     </div>
 
@@ -67,56 +77,18 @@
       <label class="form-label">Passphrase</label>
       <div class="input-wrapper">
         <span class="input-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-        <input type="password" id="loginPass" class="form-control" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
-        <button class="eye-btn" onclick="togglePass()" title="Show Password">
+        <input type="password" id="loginPass" class="form-control" placeholder="Enter your password" autocomplete="current-password">
+        <button class="eye-btn" type="button" data-admin-login-action="toggle-password" title="Show Password">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </div>
 
-    <button class="btn btn-primary submit-btn" id="loginBtn" onclick="doLogin()">Authenticate Session</button>
+    <button class="btn btn-primary submit-btn" id="loginBtn" data-admin-login-action="submit">Authenticate Session</button>
     <a href="/" class="back-link">&larr; Return to AI Chat</a>
   </div>
 
   <div id="toast"></div>
-
-  <script>
-    function togglePass() {
-      const el = document.getElementById('loginPass');
-      el.type = el.type === 'password' ? 'text' : 'password';
-    }
-
-    // Auto redirect if already logged in
-    fetch('/api/admin-check.php').then(r=>r.json()).then(d=>{ if(d.loggedIn) window.location.href='/admin'; }).catch(()=>{});
-
-    async function doLogin() {
-      const e = document.getElementById('loginEmail').value.trim();
-      const p = document.getElementById('loginPass').value;
-      if(!e || !p) return showToast('Identity and Passphrase required.', 'error');
-      
-      const btn = document.getElementById('loginBtn');
-      btn.textContent = 'Verifying...'; btn.disabled = true;
-
-      try {
-        const res = await fetch('/api/admin-login.php', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({email:e, password:p})
-        });
-        const data = await res.json();
-        if(res.ok && data.success) window.location.href = '/admin';
-        else showToast(data.error || 'Authentication Failed', 'error');
-      } catch(err) {
-        showToast('Network timeout. SECURE CHANNEL OFFLINE.', 'error');
-      } finally {
-        btn.textContent = 'Authenticate Session'; btn.disabled = false;
-      }
-    }
-
-    function showToast(msg, type='success') {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.className = 'show ' + type;
-      clearTimeout(t._timer); t._timer = setTimeout(()=>t.className='', 3500);
-    }
-  </script>
+  <script src="/admin-login.js?v=1"></script>
 </body>
 </html>

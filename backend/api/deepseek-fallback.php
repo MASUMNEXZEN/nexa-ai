@@ -79,7 +79,7 @@ function fallback_to_deepseek($body, $qHash, $userQuestion, $userEmail, $cacheDb
 
     // Ensure we are in a stream context
     header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
     header('X-Accel-Buffering: no'); // Important for Nginx
 
     $fullResponse = '';
@@ -101,7 +101,7 @@ function fallback_to_deepseek($body, $qHash, $userQuestion, $userEmail, $cacheDb
         // Bug Fix 4: Only cache if response is substantial and doesn't look like an error message
         // This prevents fallback error strings from being permanently served to future users
         $isErrorResponse = stripos($fullResponse, 'error') !== false && strlen($fullResponse) < 200;
-        if (strlen($fullResponse) > 50 && !$isErrorResponse && $cacheDb && !empty($qHash)) {
+        if (defined('NEXA_CHAT_RESPONSE_CACHE_ENABLED') && NEXA_CHAT_RESPONSE_CACHE_ENABLED && strlen($fullResponse) > 50 && !$isErrorResponse && $cacheDb && !empty($qHash)) {
             try {
                 $cacheDb->prepare("INSERT OR IGNORE INTO cache_responses (q_hash, question, answer) VALUES (?, ?, ?)")
                         ->execute([$qHash, $userQuestion, $fullResponse]);

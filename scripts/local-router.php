@@ -16,6 +16,10 @@ $publicApi = [
     'admin-subscriptions.php', 'admin-clear-cache.php', 'admin-export-csv.php',
     'admin-export-telegram-csv.php', 'admin-export-usage.php', 'admin-reports.php',
     'admin-telegram-broadcast.php', 'admin-telegram-users.php', 'push-broadcast.php',
+    'admin-content-preview.php', 'admin-content-publish.php',
+    'planner-profile.php', 'planner-month.php', 'planner-week.php', 'planner-day.php',
+    'planner-assessment.php', 'planner-question.php', 'planner-progress.php', 'planner-task.php',
+    'planner-manual.php',
 ];
 
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
@@ -69,6 +73,8 @@ if ($isInsideFrontend && is_file($resolvedFile)) {
         'ico' => 'image/x-icon',
         'woff' => 'font/woff',
         'woff2' => 'font/woff2',
+        'ttf' => 'font/ttf',
+        'otf' => 'font/otf',
     ];
     $extension = strtolower(pathinfo($resolvedFile, PATHINFO_EXTENSION));
     header('Content-Type: ' . ($mimeTypes[$extension] ?? 'application/octet-stream'));

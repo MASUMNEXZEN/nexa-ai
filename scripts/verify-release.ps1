@@ -7,9 +7,15 @@ $blocked = @(
     '.env', 'backend/.env', 'backend/api/fcm-key.json', 'backend/data/fcm-key.json',
     'backend/api/gemini_raw_dump.txt', 'backend/api/trace.txt'
 )
-$present = $blocked | Where-Object { Test-Path -LiteralPath $_ }
-if ($present) {
-    throw "Release blocked by secret or diagnostic artifact(s): $($present -join ', ')"
+$trackedPrivate = @()
+foreach ($privatePath in $blocked) {
+    $tracked = git ls-files -- $privatePath 2>$null
+    if ($LASTEXITCODE -eq 0 -and $tracked) {
+        $trackedPrivate += $privatePath
+    }
+}
+if ($trackedPrivate) {
+    throw "Release blocked because private artifact(s) are tracked by Git: $($trackedPrivate -join ', ')"
 }
 
 $apiFiles = @(Get-ChildItem -Path 'backend/api' -Filter '*.php' -File | Sort-Object FullName)
@@ -19,6 +25,14 @@ foreach ($file in $apiFiles) {
 }
 & php -l 'scripts/local-router.php'
 if ($LASTEXITCODE -ne 0) { throw 'PHP lint failed: scripts/local-router.php' }
+
+$migrationFiles = @(Get-ChildItem -Path 'backend/migrations' -Filter '*.php' -Recurse -File)
+foreach ($file in $migrationFiles) {
+    & php -l $file.FullName
+    if ($LASTEXITCODE -ne 0) { throw "PHP lint failed: $($file.FullName)" }
+}
+& php -l 'scripts/migrate.php'
+if ($LASTEXITCODE -ne 0) { throw 'PHP lint failed: scripts/migrate.php' }
 
 & python -m py_compile deploy_all.py
 if ($LASTEXITCODE -ne 0) { throw 'Deployment script syntax check failed.' }

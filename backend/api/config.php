@@ -22,6 +22,7 @@ define('RAZORPAY_KEY_ID',     getenv('RAZORPAY_KEY_ID')     ?: '');
 define('RAZORPAY_KEY_SECRET', getenv('RAZORPAY_KEY_SECRET') ?: '');
 
 define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN') ?: '');
+define('NEXA_TELEGRAM_WEBHOOK_SECRET', getenv('NEXA_TELEGRAM_WEBHOOK_SECRET') ?: '');
 
 
 define('DEEPSEEK_API_KEY', getenv('DEEPSEEK_API_KEY') ?: '');
@@ -40,6 +41,17 @@ define('DEFAULT_DAILY_LIMIT', 100);
 define('NEXA_COOKIE_SECURE', getenv('NEXA_COOKIE_SECURE') !== '0');
 define('NEXA_APP_ENV', getenv('NEXA_APP_ENV') ?: 'production');
 define('NEXA_MAIL_TRANSPORT', getenv('NEXA_MAIL_TRANSPORT') ?: 'mail');
+// Dynamic tutor answers should be generated fresh. Enable shared response caching
+// only when it is an intentional deployment decision, never by default.
+define('NEXA_CHAT_RESPONSE_CACHE_ENABLED', getenv('NEXA_CHAT_RESPONSE_CACHE') === '1');
+define('NEXA_RESPONSE_CACHE_VERSION', '2026-08-08-fresh-chat-v1');
+// Quiz rows are a content pool, not the source of truth for a new quiz session.
+// Legacy rows stay in the database for inspection but are not served by default.
+define('NEXA_QUIZ_CACHE_ENABLED', getenv('NEXA_QUIZ_CACHE') === '1');
+define('NEXA_QUIZ_CACHE_VERSION', '2026-08-08-quality-v1');
+// Request handlers require these versions to be applied by the protected CLI runner.
+define('NEXA_MAIN_SCHEMA_VERSION', 7);
+define('NEXA_CACHE_SCHEMA_VERSION', 3);
 /** Clear the unavailable local sandbox proxy for outbound AI calls only. */
 function nexa_configure_curl($handle) {
     if (defined('NEXA_APP_ENV') && NEXA_APP_ENV === 'local') {

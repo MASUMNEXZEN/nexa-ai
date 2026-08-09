@@ -5,7 +5,7 @@ error_reporting(0); ini_set('display_errors', '0');
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,13 +14,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405); echo json_encode(['error' => 'Method not allowed.']); exit;
 }
 
-$rawBody = file_get_contents('php://input');
-$data    = json_decode($rawBody, true);
+$data    = nexa_read_json_body(65536, 'Invalid Google sign-in request.');
 $idToken = $data['credential'] ?? '';
 
-if (!$idToken) {
+if (!is_string($idToken) || $idToken === '' || strlen($idToken) > 20000) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing Google credential token.']); exit;
+}
+
+$expectedClientId = defined('GOOGLE_CLIENT_ID') ? trim((string)GOOGLE_CLIENT_ID) : '';
+if ($expectedClientId === '') {
+    http_response_code(503);
+    echo json_encode(['error' => 'Google sign-in is not configured.']); exit;
 }
 
 $verifyUrl = 'https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken);
@@ -28,7 +33,9 @@ $ch = curl_init($verifyUrl);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 10,
+    CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_SSL_VERIFYHOST => 2,
 ]);
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -40,22 +47,30 @@ if ($httpCode !== 200 || !$response) {
 }
 
 $tokenData = json_decode($response, true);
-
-// Validate audience (prevents token hijacking)
-$expectedClientId = defined('GOOGLE_CLIENT_ID') ? GOOGLE_CLIENT_ID : '';
-if ($expectedClientId && ($tokenData['aud'] ?? '') !== $expectedClientId) {
+if (!is_array($tokenData)) {
     http_response_code(401);
-    echo json_encode(['error' => 'Invalid token audience.']); exit;
+    echo json_encode(['error' => 'Invalid Google token response.']); exit;
 }
 
-$email = strtolower(filter_var($tokenData['email'] ?? '', FILTER_SANITIZE_EMAIL));
-$name  = $tokenData['name'] ?? '';
-$sub   = $tokenData['sub']  ?? ''; // Google unique user ID
+// tokeninfo verifies the signature and expiry remotely; enforce the identity claims locally too.
+$issuer = (string)($tokenData['iss'] ?? '');
+$issuerValid = in_array($issuer, ['accounts.google.com', 'https://accounts.google.com'], true);
+$emailVerified = in_array($tokenData['email_verified'] ?? false, [true, 'true', 1, '1'], true);
+$expiresAt = filter_var($tokenData['exp'] ?? null, FILTER_VALIDATE_INT);
+if (($tokenData['aud'] ?? '') !== $expectedClientId || !$issuerValid || !$emailVerified || !$expiresAt || $expiresAt <= time()) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Invalid Google identity token.']); exit;
+}
 
-if (!$email) {
+$email = strtolower(trim((string)($tokenData['email'] ?? '')));
+$name  = trim((string)($tokenData['name'] ?? ''));
+$sub   = trim((string)($tokenData['sub'] ?? '')); // Google unique user ID
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $sub === '' || strlen($sub) > 255) {
     http_response_code(401);
     echo json_encode(['error' => 'Could not retrieve email from Google.']); exit;
 }
+$name = substr(preg_replace('/[\x00-\x1F\x7F]/', '', $name), 0, 160);
 
 $db = get_db_connection();
 if (!$db) {
@@ -115,6 +130,7 @@ setcookie('nexa_token', $token, [
 ]);
 
 // Start session
+session_regenerate_id(true);
 $_SESSION['user_email'] = $email;
 $_SESSION['user_name']  = $name;
 

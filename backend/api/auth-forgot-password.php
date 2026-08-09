@@ -3,7 +3,7 @@ require_once __DIR__ . '/security.php';
 nexa_apply_security_headers('GET, POST, OPTIONS');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -64,8 +64,8 @@ $otp = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
 // Clean expired entries, then store OTP atomically in SQLite
 $db->exec("DELETE FROM password_resets WHERE created_at < " . (time() - 900));
-$db->prepare("INSERT OR REPLACE INTO password_resets (email, otp, attempts, created_at) VALUES (?, ?, 0, ?)")
-   ->execute([$email, $otp, time()]);
+$db->prepare("INSERT OR REPLACE INTO password_resets (email, otp, otp_hash, attempts, created_at) VALUES (?, '', ?, 0, ?)")
+   ->execute([$email, password_hash($otp, PASSWORD_DEFAULT), time()]);
 
 
 // Send branded HTML reset email
@@ -75,22 +75,22 @@ $body = <<<HTML
 <html><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f4f7;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-    <tr><td style="background:linear-gradient(135deg,#e62335,#ff3d50);padding:28px 30px;text-align:center;">
+    <tr><td style="background:linear-gradient(135deg,#625BEE,#7E9CF8);padding:28px 30px;text-align:center;">
         <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">Password Reset</h1>
         <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">NexA AI by NexZen Institute</p>
     </td></tr>
     <tr><td style="padding:32px 30px 20px;text-align:center;">
         <p style="margin:0 0 8px;font-size:16px;color:#333;">Your password reset code is:</p>
-        <div style="display:inline-block;margin:16px 0;padding:16px 36px;background:#f8f9fa;border:2px dashed #e62335;border-radius:12px;">
-          <span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#e62335;">{$otp}</span>
+        <div style="display:inline-block;margin:16px 0;padding:16px 36px;background:#f8f9fa;border:2px dashed #625BEE;border-radius:12px;">
+          <span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#625BEE;">{$otp}</span>
         </div>
         <p style="margin:16px 0 0;font-size:13px;color:#888;">This code expires in <strong>10 minutes</strong>.</p>
     </td></tr>
     <tr><td style="padding:0 30px 28px;text-align:center;">
-        <p style="margin:0;font-size:12px;color:#aaa;">If you didn't request this, your account is safe — just ignore this email.</p>
+        <p style="margin:0;font-size:12px;color:#aaa;">If you didn&apos;t request this, your account is safe &mdash; just ignore this email.</p>
     </td></tr>
     <tr><td style="padding:16px 30px;background:#f8f9fa;text-align:center;border-top:1px solid #eee;">
-        <p style="margin:0;font-size:11px;color:#999;">© 2026 NexZen Institute</p>
+        <p style="margin:0;font-size:11px;color:#999;">&copy; 2026 NexZen Institute</p>
     </td></tr>
   </table>
 </body></html>

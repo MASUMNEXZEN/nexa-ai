@@ -73,7 +73,7 @@ function fallback_to_bedrock($body, $qHash, $userQuestion, $userEmail, $cacheDb,
 
     // Ensure we are streaming
     header('Content-Type: text/event-stream');
-    header('Cache-Control: no-cache');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
     header('X-Accel-Buffering: no'); 
 
     $fullResponse = '';
@@ -84,7 +84,7 @@ function fallback_to_bedrock($body, $qHash, $userQuestion, $userEmail, $cacheDb,
 
     if ($success && $httpCode === 200) {
         // Cache the response
-        if (strlen($fullResponse) > 10 && $cacheDb && !empty($qHash)) {
+        if (defined('NEXA_CHAT_RESPONSE_CACHE_ENABLED') && NEXA_CHAT_RESPONSE_CACHE_ENABLED && strlen($fullResponse) > 10 && $cacheDb && !empty($qHash)) {
             try {
                 $cacheDb->prepare("INSERT OR IGNORE INTO cache_responses (q_hash, question, answer) VALUES (?, ?, ?)")
                         ->execute([$qHash, $userQuestion, $fullResponse]);

@@ -1,9 +1,99 @@
 <?php
-// ALways return 200 OK immediately so Telegram doesn't retry/fail
+require_once __DIR__ . '/security.php';
+nexa_apply_security_headers('POST, OPTIONS');
+require_once __DIR__ . '/config.php';
+
+$webhookSecret = trim((string)NEXA_TELEGRAM_WEBHOOK_SECRET);
+$providedSecret = trim((string)($_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? ''));
+if ($webhookSecret === '') {
+    nexa_reject_json(503, 'Telegram webhook is not configured.');
+}
+if ($providedSecret === '' || !hash_equals($webhookSecret, $providedSecret)) {
+    nexa_reject_json(403, 'Webhook authorization failed.');
+}
+
+nexa_enforce_max_body_size(524288, 'Telegram update is too large.');
 http_response_code(200);
 
+function nexa_telegram_log(string $event, array $context = []): void
+{
+    $record = [
+        'time' => gmdate('c'),
+        'event' => $event,
+        'context' => $context,
+    ];
+
+    try {
+        $dir = __DIR__ . '/../data/telegram/';
+        if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
+            throw new RuntimeException('Telegram log directory unavailable.');
+        }
+        $line = json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($line === false || file_put_contents($dir . 'events.log', $line . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+            throw new RuntimeException('Telegram event log write failed.');
+        }
+    } catch (Throwable $e) {
+        error_log('[Nexa Telegram] event logging failed: ' . get_class($e));
+    }
+}
+
+function nexa_telegram_get_json(string $url): ?array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+    ]);
+    $response = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $decoded = json_decode((string)$response, true);
+    return $status === 200 && is_array($decoded) ? $decoded : null;
+}
+
+function nexa_telegram_download(string $url, int $maxBytes): ?array
+{
+    $buffer = '';
+    $tooLarge = false;
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => false,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_WRITEFUNCTION => function ($curl, string $chunk) use (&$buffer, &$tooLarge, $maxBytes): int {
+            if (strlen($buffer) + strlen($chunk) > $maxBytes) {
+                $tooLarge = true;
+                return 0;
+            }
+            $buffer .= $chunk;
+            return strlen($chunk);
+        },
+    ]);
+    $success = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($success === false || $tooLarge || $status !== 200 || $buffer === '') {
+        return null;
+    }
+
+    $mimeType = (new finfo(FILEINFO_MIME_TYPE))->buffer($buffer);
+    if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return null;
+    }
+
+    return ['data' => $buffer, 'mime_type' => $mimeType];
+}
+
 try {
-    require_once __DIR__ . '/config.php';
     // Telegram bots use synchronous generation for reliable webhook latency.
     define('GEMINI_MODEL', getenv('TELEGRAM_GEMINI_MODEL') ?: 'gemini-2.0-flash');
     define('TELEGRAM_API_URL', 'https://api.telegram.org/bot' . TELEGRAM_BOT_TOKEN . '/');
@@ -18,15 +108,24 @@ try {
         @mkdir(TELEGRAM_DATA_DIR, 0777, true);
     }
 
-    $content = file_get_contents("php://input");
-    @file_put_contents(TELEGRAM_DATA_DIR . "log.txt", date("Y-m-d H:i:s") . " - " . $content . "\n", FILE_APPEND);
-    
-    if (!$content) exit;
-    $update = json_decode($content, true);
+    $content = file_get_contents('php://input');
+    $update = json_decode($content ?: '', true);
 
-    if (!$update || !isset($update['message'])) {
+    if (!is_array($update) || !isset($update['message']) || !is_array($update['message'])) {
+        nexa_telegram_log('ignored_update', [
+            'update_id' => $update['update_id'] ?? null,
+            'has_message' => isset($update['message']),
+        ]);
         exit;
     }
+
+    $messageForLog = $update['message'];
+    $chatIdForLog = $messageForLog['chat']['id'] ?? '';
+    nexa_telegram_log('update_received', [
+        'update_id' => $update['update_id'] ?? null,
+        'chat_hash' => $chatIdForLog === '' ? null : hash('sha256', (string)$chatIdForLog),
+        'has_photo' => isset($messageForLog['photo']),
+    ]);
 
     $message = $update['message'];
     $chatId = $message['chat']['id'];
@@ -39,15 +138,22 @@ try {
     $imagePart = null;
     if (isset($message['photo'])) {
         $photo = end($message['photo']); // highest resolution
-        $fileInfoUrl = TELEGRAM_API_URL . "getFile?file_id=" . $photo['file_id'];
-        $fileInfo = @json_decode(@file_get_contents($fileInfoUrl), true);
-        if (isset($fileInfo['result']['file_path'])) {
-            $dlUrl = "https://api.telegram.org/file/bot" . TELEGRAM_BOT_TOKEN . "/" . $fileInfo['result']['file_path'];
-            $imgData = @file_get_contents($dlUrl);
-            if ($imgData) {
-                $imagePart = ['inline_data' => ['mime_type' => 'image/jpeg', 'data' => base64_encode($imgData)]];
-                if (isset($message['caption'])) $text = trim($message['caption']);
-                if (empty($text)) $text = "Describe or solve what is in this image.";
+        $fileId = is_array($photo) ? (string)($photo['file_id'] ?? '') : '';
+        if ($fileId !== '' && strlen($fileId) <= 256) {
+            $fileInfoUrl = TELEGRAM_API_URL . "getFile?file_id=" . urlencode($fileId);
+            $fileInfo = nexa_telegram_get_json($fileInfoUrl);
+            $filePath = $fileInfo['result']['file_path'] ?? '';
+            if (is_string($filePath) && preg_match('/^[A-Za-z0-9_.\/-]+$/', $filePath)) {
+                $dlUrl = "https://api.telegram.org/file/bot" . TELEGRAM_BOT_TOKEN . "/" . $filePath;
+                $download = nexa_telegram_download($dlUrl, 5000000);
+                if ($download) {
+                    $imagePart = ['inline_data' => [
+                        'mime_type' => $download['mime_type'],
+                        'data' => base64_encode($download['data']),
+                    ]];
+                    if (isset($message['caption'])) $text = trim((string)$message['caption']);
+                    if (empty($text)) $text = "Describe or solve what is in this image.";
+                }
             }
         }
     }
@@ -63,7 +169,10 @@ try {
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         curl_exec($ch);
         curl_close($ch);
     }
@@ -182,8 +291,10 @@ try {
         $aiReply = $result['candidates'][0]['content']['parts'][0]['text'];
     } else {
         // Log the exact Gemini error for debugging
-        @file_put_contents(TELEGRAM_DATA_DIR . 'gemini_error.log',
-            date('Y-m-d H:i:s') . " HTTP:{$httpCode} " . $response . "\n", FILE_APPEND);
+        nexa_telegram_log('provider_error', [
+            'provider' => 'gemini',
+            'http_code' => $httpCode,
+        ]);
 
         // DeepSeek Fallback
         $dsMessages = [['role' => 'system', 'content' => $systemInstruction]];
@@ -228,5 +339,5 @@ try {
     sendTelegramMessage($chatId, $aiReply);
 
 } catch (\Throwable $e) {
-    @file_put_contents(__DIR__ . '/../data/telegram/crash.log', date('Y-m-d H:i:s') . ' - ' . $e->getMessage() . "\n", FILE_APPEND);
+    nexa_telegram_log('processing_error', ['type' => get_class($e)]);
 }

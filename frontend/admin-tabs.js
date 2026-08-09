@@ -12,6 +12,7 @@ function switchTab(tab) {
     plans:         loadPlans,
     users:         () => {}, // users loaded by admin-engine.js on init
     appconfig:     loadAppConfig,
+    content:       () => {},
     push:          () => {},
     telegram:      loadTelegram,
   };
@@ -148,112 +149,189 @@ async function loadSubscriptions() {
 }
 
 /* ── PLANS EDITOR ─────────────────────────────────────────── */
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 function normalizePlanName(value) {
   return ['free', 'pro', 'premium'].includes(value) ? value : 'free';
 }
+
+function createPlanField(labelText, inputId, value, type = 'text') {
+  const field = document.createElement('div');
+  field.className = 'plan-field';
+  const label = document.createElement('label');
+  label.textContent = labelText;
+  label.htmlFor = inputId;
+  const input = document.createElement('input');
+  input.className = 'input-control';
+  input.id = inputId;
+  input.type = type;
+  input.value = value == null ? '' : String(value);
+  field.append(label, input);
+  return field;
+}
+
+function bindPlanEditorActions() {
+  const grid = el('plansGrid');
+  if (!grid || grid.dataset.actionsBound === 'true') return;
+  grid.dataset.actionsBound = 'true';
+  grid.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-plan-action]');
+    if (!button || !grid.contains(button)) return;
+    const planName = normalizePlanName(button.dataset.planName);
+    const action = button.dataset.planAction;
+    if (action === 'add-feature') addFeat(planName);
+    else if (action === 'remove-feature') removeFeat(planName, Number(button.dataset.featureIndex));
+    else if (action === 'save-plan') savePlan(planName);
+  });
+}
+
 async function loadPlans() {
   const grid = el('plansGrid');
+  if (!grid) return;
   try {
     const data = await apiFetch('/api/subscription-plans.php');
-    const planIcons = { free: '🆓', pro: '🔥', premium: '👑' };
-    grid.innerHTML = data.plans.map(p => `
-      <div class="plan-editor glass-panel">
-        <h3>${planIcons[p.name] || '📦'} ${escapeHtml(p.display_name)}</h3>
-        <div class="plan-field">
-          <label>Display Name</label>
-          <input class="input-control" id="plan_display_${normalizePlanName(p.name)}" value="${escapeHtml(p.display_name)}">
-        </div>
-        <div class="plan-field">
-          <label>Price (₹/month) — 0 for Free</label>
-          <input type="number" class="input-control" id="plan_price_${normalizePlanName(p.name)}" value="${Math.round(p.price_paise/100)}">
-        </div>
-        <div class="plan-field">
-          <label>Daily Question Limit (9999 = Unlimited)</label>
-          <input type="number" class="input-control" id="plan_limit_${normalizePlanName(p.name)}" value="${p.daily_limit}">
-        </div>
-        <div class="plan-field">
-          <label>Features</label>
-          <div class="features-list" id="plan_feat_${normalizePlanName(p.name)}">
-            ${(p.features||[]).map((f,i) => `<span class="feature-tag">${escapeHtml(f)}<button onclick="removeFeat('${normalizePlanName(p.name)}',${i})">×</button></span>`).join('')}
-          </div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <input class="input-control" id="plan_newfeat_${normalizePlanName(p.name)}" placeholder="Add feature..." style="font-size:13px;">
-            <button class="btn" onclick="addFeat('${normalizePlanName(p.name)}')">+</button>
-          </div>
-        </div>
-        <div class="plan-field">
-          <label>Razorpay Plan ID (optional)</label>
-          <input class="input-control" id="plan_rpid_${normalizePlanName(p.name)}" value="${escapeHtml(p.razorpay_plan_id||'')}" placeholder="plan_xxxxx">
-        </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;" onclick="savePlan('${normalizePlanName(p.name)}')">💾 Save ${escapeHtml(p.display_name)} Plan</button>
-      </div>`).join('');
-  } catch(e) { grid.innerHTML = '<div style="color:var(--accent);padding:20px;">Error loading plans</div>'; }
+    if (!Array.isArray(data.plans)) throw new Error('Invalid plans response');
+    grid.replaceChildren();
+    data.plans.forEach((plan) => {
+      const planName = normalizePlanName(plan.name);
+      _planFeatures[planName] = Array.isArray(plan.features)
+        ? plan.features.filter((feature) => typeof feature === 'string').map((feature) => feature.trim()).filter(Boolean)
+        : [];
+
+      const card = document.createElement('div');
+      card.className = 'plan-editor glass-panel';
+      card.dataset.planName = planName;
+
+      const heading = document.createElement('h3');
+      heading.textContent = `${String(plan.display_name || planName)} Plan`;
+      card.appendChild(heading);
+      card.appendChild(createPlanField('Display Name', `plan_display_${planName}`, plan.display_name));
+      card.appendChild(createPlanField('Price (INR/month) - 0 for Free', `plan_price_${planName}`, Math.round(Number(plan.price_paise || 0) / 100), 'number'));
+      card.appendChild(createPlanField('Daily Question Limit (9999 = Unlimited)', `plan_limit_${planName}`, Number(plan.daily_limit || 1), 'number'));
+
+      const featureField = document.createElement('div');
+      featureField.className = 'plan-field';
+      const featureLabel = document.createElement('label');
+      featureLabel.textContent = 'Features';
+      featureField.appendChild(featureLabel);
+      const featureList = document.createElement('div');
+      featureList.className = 'features-list';
+      featureList.id = `plan_feat_${planName}`;
+      featureField.appendChild(featureList);
+
+      const addRow = document.createElement('div');
+      addRow.style.cssText = 'display:flex;gap:8px;margin-top:10px;';
+      const newFeature = document.createElement('input');
+      newFeature.className = 'input-control';
+      newFeature.id = `plan_newfeat_${planName}`;
+      newFeature.placeholder = 'Add feature...';
+      newFeature.style.fontSize = '13px';
+      const addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.className = 'btn';
+      addButton.textContent = '+';
+      addButton.dataset.planAction = 'add-feature';
+      addButton.dataset.planName = planName;
+      addRow.append(newFeature, addButton);
+      featureField.appendChild(addRow);
+      card.appendChild(featureField);
+
+      card.appendChild(createPlanField('Razorpay Plan ID (optional)', `plan_rpid_${planName}`, plan.razorpay_plan_id || ''));
+      const saveButton = document.createElement('button');
+      saveButton.type = 'button';
+      saveButton.className = 'btn btn-primary';
+      saveButton.style.cssText = 'width:100%;justify-content:center;margin-top:8px;';
+      saveButton.textContent = `Save ${String(plan.display_name || planName)} Plan`;
+      saveButton.dataset.planAction = 'save-plan';
+      saveButton.dataset.planName = planName;
+      card.appendChild(saveButton);
+      grid.appendChild(card);
+      renderFeats(planName);
+    });
+    bindPlanEditorActions();
+  } catch (error) {
+    console.error('loadPlans:', error);
+    grid.replaceChildren();
+    const message = document.createElement('div');
+    message.className = 'plan-load-error';
+    message.textContent = 'Error loading plans';
+    grid.appendChild(message);
+  }
 }
 
 const _planFeatures = {};
 function addFeat(planName) {
-  const inp = el('plan_newfeat_' + planName);
-  if (!inp.value.trim()) return;
-  if (!_planFeatures[planName]) {
-    // collect from DOM
-    _planFeatures[planName] = [];
-    document.querySelectorAll(`#plan_feat_${planName} .feature-tag`).forEach(el => {
-      _planFeatures[planName].push(el.textContent.trim().slice(0,-1));
-    });
+  const input = el('plan_newfeat_' + planName);
+  const value = input?.value.trim() || '';
+  if (!value) return;
+  if (value.length > 120) {
+    showToast('Feature text is too long.', 'error');
+    return;
   }
-  _planFeatures[planName].push(inp.value.trim());
-  inp.value = '';
+  _planFeatures[planName] = _planFeatures[planName] || [];
+  if (_planFeatures[planName].length >= 20) {
+    showToast('A plan can have at most 20 features.', 'error');
+    return;
+  }
+  _planFeatures[planName].push(value);
+  input.value = '';
   renderFeats(planName);
 }
-function removeFeat(planName, idx) {
-  if (!_planFeatures[planName]) {
-    _planFeatures[planName] = [];
-    document.querySelectorAll(`#plan_feat_${planName} .feature-tag`).forEach(el2 => {
-      _planFeatures[planName].push(el2.textContent.trim().slice(0,-1));
-    });
-  }
-  _planFeatures[planName].splice(idx, 1);
+
+function removeFeat(planName, index) {
+  if (!Number.isInteger(index) || index < 0 || index >= (_planFeatures[planName] || []).length) return;
+  _planFeatures[planName].splice(index, 1);
   renderFeats(planName);
 }
+
 function renderFeats(planName) {
   const container = el('plan_feat_' + planName);
-  container.innerHTML = _planFeatures[planName].map((f,i) =>
-    `<span class="feature-tag">${escapeHtml(f)}<button onclick="removeFeat('${planName}',${i})">×</button></span>`).join('');
+  if (!container) return;
+  container.replaceChildren();
+  (_planFeatures[planName] || []).forEach((feature, index) => {
+    const tag = document.createElement('span');
+    tag.className = 'feature-tag';
+    const text = document.createTextNode(feature);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.title = 'Remove feature';
+    remove.textContent = 'x';
+    remove.dataset.planAction = 'remove-feature';
+    remove.dataset.planName = planName;
+    remove.dataset.featureIndex = String(index);
+    tag.append(text, remove);
+    container.appendChild(tag);
+  });
 }
 
 async function savePlan(planName) {
-  const feats = _planFeatures[planName] || [];
-  if (!feats.length) {
-    // fallback: collect from DOM
-    document.querySelectorAll(`#plan_feat_${planName} .feature-tag`).forEach(el2 => {
-      feats.push(el2.textContent.trim().slice(0,-1));
-    });
+  const features = Array.isArray(_planFeatures[planName]) ? [..._planFeatures[planName]] : [];
+  if (!features.length) {
+    showToast('Add at least one plan feature.', 'error');
+    return;
   }
-  const payload = {
-    name:             planName,
-    display_name:     el('plan_display_' + planName).value,
-    price_paise:      parseInt(el('plan_price_' + planName).value) * 100,
-    daily_limit:      parseInt(el('plan_limit_' + planName).value),
-    features:         feats,
-    razorpay_plan_id: el('plan_rpid_' + planName).value,
-    active: 1,
-  };
+  const displayName = el('plan_display_' + planName)?.value.trim() || '';
+  const priceInr = Number(el('plan_price_' + planName)?.value);
+  const dailyLimit = Number(el('plan_limit_' + planName)?.value);
+  const razorpayPlanId = el('plan_rpid_' + planName)?.value.trim() || '';
+  if (!displayName || !Number.isInteger(priceInr) || priceInr < 0 || !Number.isInteger(dailyLimit) || dailyLimit < 1) {
+    showToast('Enter valid plan values.', 'error');
+    return;
+  }
   try {
-    const res = await apiFetch('/api/subscription-plans.php', 'POST', payload);
+    const res = await apiFetch('/api/subscription-plans.php', 'POST', {
+      name: planName,
+      display_name: displayName,
+      price_paise: priceInr * 100,
+      daily_limit: dailyLimit,
+      features,
+      razorpay_plan_id: razorpayPlanId,
+      active: 1,
+    });
     showToast(res.message || 'Plan saved!', 'success');
-  } catch(e) { showToast('Error saving plan', 'error'); }
+  } catch (error) {
+    console.error('savePlan:', error);
+    showToast('Error saving plan', 'error');
+  }
 }
-
-/* ── APP CONFIG ───────────────────────────────────────────── */
 async function loadAppConfig() {
   try {
     const data = await apiFetch('/api/admin-config.php');
@@ -294,7 +372,7 @@ async function saveAppConfig() {
   };
   try {
     const res = await apiFetch('/api/admin-config.php', 'POST', { updates });
-    showToast('✅ Config saved! App will update on next launch.', 'success');
+    showToast('Config saved! App will update on next launch.', 'success');
   } catch(e) { showToast('Error saving config', 'error'); }
 }
 
@@ -316,10 +394,10 @@ async function sendPush() {
   el('pushResult').textContent = 'Sending...';
   try {
     const res = await apiFetch('/api/push-broadcast.php', 'POST', { title, body, target, email });
-    el('pushResult').textContent = `✅ ${res.message}`;
+    el('pushResult').textContent = res.message;
     showToast(res.message, 'success');
   } catch(e) {
-    el('pushResult').textContent = '❌ Failed to send. Check Firebase config.';
+    el('pushResult').textContent = 'Failed to send. Check Firebase config.';
     showToast('Push failed', 'error');
   }
 }

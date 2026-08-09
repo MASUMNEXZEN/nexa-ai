@@ -2,7 +2,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/security.php';
 nexa_apply_security_headers('POST, OPTIONS');
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -35,9 +35,3 @@ if ($emailValid && $passwordValid) {
     http_response_code(401);
     echo json_encode(['error' => 'Invalid email or password.']);
 }
-
-
-
-
-
-

@@ -3,7 +3,7 @@ require_once __DIR__ . '/security.php';
 nexa_apply_security_headers('GET, POST, OPTIONS');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
-session_start();
+nexa_start_session();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -14,9 +14,9 @@ $rawBody = file_get_contents('php://input');
 $data    = json_decode($rawBody, true);
 
 $email = strtolower(filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL));
-$otp   = preg_replace('/\D/', '', $data['otp'] ?? '');
+$otp   = preg_replace('/\D/', '', (string)($data['otp'] ?? ''));
 
-if (!$email || !$otp) {
+if (!$email || !preg_match('/^\d{6}$/', $otp)) {
     http_response_code(400);
     echo json_encode(['error' => 'Email and OTP required.']); exit;
 }
@@ -28,7 +28,8 @@ if (!$db) {
 }
 
 // Load pending registration
-$stmt = $db->prepare("SELECT * FROM pending_users WHERE email = ? LIMIT 1");
+$stmt = $db->prepare("SELECT email, password_hash, otp_hash, attempts, name, country, state, district, pin, address, referral, created_at
+    FROM pending_users WHERE email = ? LIMIT 1");
 $stmt->execute([$email]);
 $record = $stmt->fetch();
 
@@ -52,7 +53,7 @@ if ((int)$record['attempts'] >= 5) {
 }
 
 // Verify OTP
-if ($record['otp'] !== $otp) {
+if (empty($record['otp_hash']) || !password_verify($otp, $record['otp_hash'])) {
     $db->prepare("UPDATE pending_users SET attempts = attempts + 1 WHERE email = ?")->execute([$email]);
     $left = 5 - ((int)$record['attempts'] + 1);
     http_response_code(401);
@@ -99,6 +100,9 @@ if ($existing) {
 
 // Remove from pending
 $db->prepare("DELETE FROM pending_users WHERE email = ?")->execute([$email]);
+
+// Rotate the session after registration verification.
+session_regenerate_id(true);
 
 // Set persistent cookie
 $year = 60 * 60 * 24 * 30;

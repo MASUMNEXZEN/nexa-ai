@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NexA AI — Admin Command Center</title>
-  <meta name="theme-color" content="#08090f">
-  <link rel="icon" href="/logo-icon.png">
-  <link rel="stylesheet" href="/admin-style.css?v=3">
-  <link rel="stylesheet" href="/admin-tabs.css?v=1">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+  <meta name="theme-color" content="#11152A">
+  <link rel="icon" href="/logo-icon.png?v=5">
+  <link rel="stylesheet" href="/vendor/fonts.css?v=2">
+  <link rel="stylesheet" href="/admin-style.css?v=5">
+  <link rel="stylesheet" href="/admin-tabs.css?v=2">
+  <script src="/vendor/chart/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -20,7 +21,7 @@
   <!-- Header -->
   <header class="admin-header glass-panel" id="authHeader" style="display:none;">
     <div class="brand-wrap">
-      <img src="/logo.png?v=2" alt="NexA Logo" onerror="this.style.display='none'">
+      <img src="/logo-icon.png?v=5" alt="NexA Logo">
       <div class="brand-text">
         <h1>NexA <span>AI</span></h1>
         <div class="brand-badge">Command Center</div>
@@ -28,29 +29,30 @@
     </div>
     <div class="header-actions">
       <div class="admin-email" id="adminEmail">Connecting...</div>
-      <button class="btn" onclick="refreshAll()">↻ Refresh</button>
-      <a href="/api/admin-export-csv.php" class="btn" target="_blank">↓ Export</a>
-      <button class="btn" onclick="logout()">Logout</button>
-      <a href="/" class="btn btn-primary">Live App →</a>
+      <button class="btn" data-admin-action="refresh"><span class="admin-tab-icon" data-icon="refresh" aria-hidden="true"></span> Refresh</button>
+      <a href="/api/admin-export-csv.php" class="btn" target="_blank"><span class="admin-tab-icon" data-icon="arrowDown" aria-hidden="true"></span> Export</a>
+      <button class="btn" data-admin-action="logout">Logout</button>
+      <a href="/" class="btn btn-primary"><span class="admin-tab-icon" data-icon="arrowRight" aria-hidden="true"></span> Live App</a>
     </div>
   </header>
 
   <!-- Tab Navigation -->
   <nav class="tab-nav glass-panel" id="tabNav" style="display:none;">
-    <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
-    <button class="tab-btn" data-tab="subscriptions" onclick="switchTab('subscriptions')">💰 Revenue</button>
-    <button class="tab-btn" data-tab="plans" onclick="switchTab('plans')">📋 Plans</button>
-    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">👥 Users</button>
-    <button class="tab-btn" data-tab="appconfig" onclick="switchTab('appconfig')">⚙️ App Config</button>
-    <button class="tab-btn" data-tab="push" onclick="switchTab('push')">📢 Push Notify</button>
-    <button class="tab-btn" data-tab="telegram" onclick="switchTab('telegram')">✈️ Telegram</button>
+    <button class="tab-btn active" data-tab="dashboard" data-admin-action="switch-tab" data-tab="dashboard"><span class="admin-tab-icon" data-icon="chart" aria-hidden="true"></span> Dashboard</button>
+    <button class="tab-btn" data-tab="subscriptions" data-admin-action="switch-tab" data-tab="subscriptions"><span class="admin-tab-icon" data-icon="wallet" aria-hidden="true"></span> Revenue</button>
+    <button class="tab-btn" data-tab="plans" data-admin-action="switch-tab" data-tab="plans"><span class="admin-tab-icon" data-icon="clipboard" aria-hidden="true"></span> Plans</button>
+    <button class="tab-btn" data-tab="users" data-admin-action="switch-tab" data-tab="users"><span class="admin-tab-icon" data-icon="users" aria-hidden="true"></span> Users</button>
+    <button class="tab-btn" data-tab="appconfig" data-admin-action="switch-tab" data-tab="appconfig"><span class="admin-tab-icon" data-icon="settings" aria-hidden="true"></span> App Config</button>
+    <button class="tab-btn" data-tab="content" data-admin-action="switch-tab"><span class="admin-tab-icon" data-icon="database" aria-hidden="true"></span> Content</button>
+    <button class="tab-btn" data-tab="push" data-admin-action="switch-tab" data-tab="push"><span class="admin-tab-icon" data-icon="megaphone" aria-hidden="true"></span> Push Notify</button>
+    <button class="tab-btn" data-tab="telegram" data-admin-action="switch-tab" data-tab="telegram"><span class="admin-tab-icon" data-icon="send" aria-hidden="true"></span> Telegram</button>
   </nav>
 
   <main id="dashboard" style="display:none;">
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: DASHBOARD                                              -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content active dashboard-grid" id="tab-dashboard">
 
       <div class="stat-card glass-panel">
@@ -73,7 +75,7 @@
       <!-- Active Users Table -->
       <div class="glass-panel card-full" style="padding:24px;">
         <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <span style="color:var(--success)">●</span> Active Students Today
+          <span style="color:var(--success)">&bull;</span> Active Students Today
         </h3>
         <div class="table-wrap">
           <table><thead><tr><th>Email</th><th>Queries</th><th>Plan</th><th>Status</th></tr></thead>
@@ -109,14 +111,14 @@
           </label>
         </div>
         <textarea id="announcementText" class="input-control" placeholder="Type a message to display at the top of the chat app..."></textarea>
-        <button class="btn btn-primary" id="saveAnnouncementBtn" onclick="saveAnnouncement()" style="margin-top:12px;width:100%;justify-content:center;">Push to Live App</button>
+        <button class="btn btn-primary" id="saveAnnouncementBtn" data-admin-action="save-announcement" style="margin-top:12px;width:100%;justify-content:center;">Push to Live App</button>
       </div>
 
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: SUBSCRIPTIONS / REVENUE                               -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content dashboard-grid" id="tab-subscriptions" style="display:none;">
 
       <div class="stat-card glass-panel">
@@ -156,18 +158,18 @@
 
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: SUBSCRIPTION PLANS                                     -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-plans" style="display:none;">
       <div class="plans-grid" id="plansGrid">
         <div style="color:var(--text-muted);text-align:center;padding:40px;">Loading plans...</div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: USERS                                                  -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-users" style="display:none;">
       <div class="glass-panel" style="padding:24px;margin-bottom:24px;">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
@@ -175,11 +177,11 @@
             <h3 style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Daily Limit (Free)</h3>
             <div class="input-group" style="margin:0;padding:0;">
               <input type="number" id="newLimitInput" class="input-control" min="1" placeholder="Set Limit">
-              <button class="btn btn-primary" onclick="updateLimit()">Save</button>
+              <button class="btn btn-primary" data-admin-action="update-limit">Save</button>
             </div>
           </div>
           <div style="flex:1;min-width:200px;">
-            <input type="text" id="userSearch" class="input-control" placeholder="🔍 Search user by email..." oninput="filterUsers()">
+            <input type="text" id="userSearch" class="input-control" placeholder=" Search user by email..." data-admin-action="filter-users">
           </div>
         </div>
       </div>
@@ -199,15 +201,15 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: APP CONFIG                                             -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-appconfig" style="display:none;">
       <div class="config-grid">
 
         <!-- Daily Limits -->
         <div class="glass-panel config-section">
-          <h3 class="config-section-title">📊 Daily Question Limits</h3>
+          <h3 class="config-section-title"><span class="admin-tab-icon" data-icon="chart" aria-hidden="true"></span> Daily Question Limits</h3>
           <div class="config-row">
             <label>Free Users (Q/day)</label>
             <input type="number" id="cfg_free_daily_limit" class="input-control" style="max-width:120px;">
@@ -224,7 +226,7 @@
 
         <!-- Feature Flags -->
         <div class="glass-panel config-section">
-          <h3 class="config-section-title">🎛️ Feature Flags</h3>
+          <h3 class="config-section-title"><span class="admin-tab-icon" data-icon="settings" aria-hidden="true"></span> Feature Flags</h3>
           <div class="config-row">
             <label>Voice Input</label>
             <label class="toggle"><input type="checkbox" id="cfg_voice_enabled"><span class="toggle-slider"></span></label>
@@ -245,7 +247,7 @@
 
         <!-- Maintenance -->
         <div class="glass-panel config-section">
-          <h3 class="config-section-title">🔧 Maintenance Mode</h3>
+          <h3 class="config-section-title"><span class="admin-tab-icon" data-icon="wrench" aria-hidden="true"></span> Maintenance</h3>
           <div class="config-row">
             <label>Enable Maintenance</label>
             <label class="toggle"><input type="checkbox" id="cfg_maintenance_mode"><span class="toggle-slider"></span></label>
@@ -258,7 +260,7 @@
 
         <!-- App Version -->
         <div class="glass-panel config-section">
-          <h3 class="config-section-title">📱 App Version Gate</h3>
+          <h3 class="config-section-title"><span class="admin-tab-icon" data-icon="settings" aria-hidden="true"></span> App Version Gate</h3>
           <div class="config-row">
             <label>Min Required Version</label>
             <input type="text" id="cfg_app_version_required" class="input-control" style="max-width:140px;" placeholder="1.0.0">
@@ -271,7 +273,7 @@
 
         <!-- Content -->
         <div class="glass-panel config-section" style="grid-column:1/-1;">
-          <h3 class="config-section-title">💬 Content & Messaging</h3>
+          <h3 class="config-section-title"><span class="admin-tab-icon" data-icon="message" aria-hidden="true"></span> Content</h3>
           <div class="config-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
             <label>Welcome Message (shown after login)</label>
             <input type="text" id="cfg_welcome_message" class="input-control" placeholder="Welcome to NexA AI!">
@@ -283,19 +285,101 @@
         </div>
 
         <div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:12px;">
-          <button class="btn" onclick="loadAppConfig()">↻ Reset</button>
-          <button class="btn btn-primary" onclick="saveAppConfig()">💾 Save All Config</button>
+          <button class="btn" data-admin-action="load-config"><span class="admin-tab-icon" data-icon="refresh" aria-hidden="true"></span> Reset</button>
+          <button class="btn btn-primary" data-admin-action="save-config"><span class="admin-tab-icon" data-icon="check" aria-hidden="true"></span> Save All Config</button>
         </div>
 
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
+    <!-- TAB: CONTENT IMPORT                                          -->
+    <!-- section -->
+    <div class="tab-content" id="tab-content" style="display:none;">
+      <div class="content-import-layout">
+        <section class="glass-panel content-import-form">
+          <div class="content-section-heading">
+            <span class="admin-tab-icon" data-icon="database" aria-hidden="true"></span>
+            <div>
+              <h3>Canonical content import</h3>
+              <p>Preview owner-authorized Markdown or Word content before it reaches students.</p>
+            </div>
+          </div>
+
+          <label for="contentFile">Document</label>
+          <input id="contentFile" class="input-control" type="file" accept=".md,.docx">
+
+          <label for="contentSourceType">Source type</label>
+          <select id="contentSourceType" class="input-control">
+            <option value="syllabus">Syllabus</option>
+            <option value="pyq">Previous-year questions</option>
+          </select>
+
+          <label for="contentSourceTitle">Source title</label>
+          <input id="contentSourceTitle" class="input-control" type="text" placeholder="West Bengal ANM/GNM PYQ 2025">
+
+          <label for="contentExamCode">Exam code</label>
+          <input id="contentExamCode" class="input-control" type="text" value="WB_ANM_GNM">
+
+          <div class="content-form-row">
+            <div>
+              <label for="contentSourceYear">Source year</label>
+              <input id="contentSourceYear" class="input-control" type="number" min="1900" max="2200" placeholder="Optional">
+            </div>
+            <div>
+              <label for="contentTrustLevel">Trust level</label>
+              <select id="contentTrustLevel" class="input-control">
+                <option value="owner_verified">Owner verified</option>
+                <option value="reviewer_verified">Reviewer verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="contentPublisher">Publisher or owner</label>
+          <input id="contentPublisher" class="input-control" type="text" placeholder="Optional">
+
+          <label for="contentSourceReference">Source reference</label>
+          <input id="contentSourceReference" class="input-control" type="text" placeholder="Optional link or internal reference">
+
+          <label class="content-confirmation">
+            <input id="contentOwnershipConfirmed" type="checkbox">
+            I confirm this content is owned or authorized for use.
+          </label>
+
+          <div class="content-action-row">
+            <button class="btn btn-primary" id="contentPreviewButton" data-admin-action="preview-content">
+              <span class="admin-tab-icon" data-icon="search" aria-hidden="true"></span> Preview document
+            </button>
+            <button class="btn" id="contentPublishButton" data-admin-action="publish-content" disabled>
+              <span class="admin-tab-icon" data-icon="check" aria-hidden="true"></span> Publish validated content
+            </button>
+          </div>
+          <p class="content-import-note">Publishing is blocked when records are incomplete, duplicated, or not English-ready.</p>
+        </section>
+
+        <section class="glass-panel content-import-preview">
+          <div class="content-section-heading">
+            <span class="admin-tab-icon" data-icon="clipboard" aria-hidden="true"></span>
+            <div>
+              <h3>Validation preview</h3>
+              <p id="contentImportStatus">Choose a document to begin.</p>
+            </div>
+          </div>
+          <div class="content-summary" id="contentImportSummary">No document previewed.</div>
+          <h4>Warnings</h4>
+          <ul class="content-warning-list" id="contentImportWarnings"><li>Preview warnings will appear here.</li></ul>
+          <h4>Record sample</h4>
+          <div id="contentImportRecords"></div>
+        </section>
+      </div>
+    </div>
+    <!-- section -->
     <!-- TAB: PUSH NOTIFICATIONS                                     -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-push" style="display:none;">
       <div class="glass-panel" style="padding:32px;max-width:700px;margin:0 auto;">
-        <h3 style="font-size:18px;font-weight:700;margin-bottom:24px;">📢 Send Push Notification</h3>
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:24px;"><span class="admin-tab-icon" data-icon="megaphone" aria-hidden="true"></span> Send Push Notification</h3>
 
         <div style="margin-bottom:16px;">
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">NOTIFICATION TITLE</label>
@@ -304,7 +388,7 @@
 
         <div style="margin-bottom:16px;">
           <label style="font-size:13px;color:var(--text-muted);display:block;margin-bottom:6px;">MESSAGE *</label>
-          <textarea id="pushBody" class="input-control" rows="4" placeholder="📚 Time to study! Open NexA and start your prep session."></textarea>
+          <textarea id="pushBody" class="input-control" rows="4" placeholder="Time to study! Open NexA and start your prep session."></textarea>
         </div>
 
         <div style="margin-bottom:24px;">
@@ -319,23 +403,22 @@
           <input type="email" id="pushEmail" class="input-control" style="margin-top:12px;display:none;" placeholder="user@example.com">
         </div>
 
-        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="sendPush()">🚀 Send Push Notification</button>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" data-admin-action="send-push"><span class="admin-tab-icon" data-icon="send" aria-hidden="true"></span> Send Push Notification</button>
         <div id="pushResult" style="margin-top:16px;font-size:14px;text-align:center;color:var(--text-muted);"></div>
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <!-- TAB: TELEGRAM                                               -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- section -->
     <div class="tab-content" id="tab-telegram" style="display:none;">
       <div class="glass-panel card-full" style="padding:24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
-          <h3 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;">
-            ✈️ Telegram Subscriptions
+          <h3 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;"><span class="admin-tab-icon" data-icon="send" aria-hidden="true"></span> Telegram Subscriptions
             <span class="badge badge-info" id="totalTelegramUsers" style="font-family:var(--font-mono)">0 TOTAL</span>
           </h3>
           <div style="display:flex;gap:12px;">
-            <button class="btn" onclick="openBroadcast()" style="color:var(--info);border-color:rgba(59,130,246,0.3)">Broadcast Message</button>
+            <button class="btn" data-admin-action="open-broadcast" style="color:var(--info);border-color:rgba(59,130,246,0.3)">Broadcast Message</button>
             <a href="/api/admin-export-telegram-csv.php" target="_blank" class="btn">Export Data</a>
           </div>
         </div>
@@ -351,18 +434,18 @@
   <!-- MODALS -->
   <div class="modal-overlay" id="userProfileModal">
     <div class="modal-card glass-panel">
-      <button class="modal-close" onclick="hideModal('userProfileModal')">×</button>
+      <button class="modal-close" data-admin-action="hide-modal" data-modal-id="userProfileModal">&times;</button>
       <div class="modal-header">
         <div class="modal-header-icon" id="pmAvatar">?</div>
         <div><div class="modal-title" id="pmName">Name</div><div class="modal-subtitle" id="pmEmail">Email</div></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="btn" style="color:var(--success);border-color:rgba(16,185,129,0.3)" onclick="adminAction('upgrade','pro')">⬆ Set Pro</button>
-        <button class="btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" onclick="adminAction('upgrade','premium')">👑 Set Premium</button>
-        <button class="btn" onclick="adminAction('downgrade','free')">⬇ Set Free</button>
-        <button class="btn" onclick="adminAction('reset_count','')">🔄 Reset Count</button>
-        <button class="btn" onclick="adminAction('grant_bonus','')" style="color:var(--info)">+10 Bonus</button>
-        <button class="btn" style="color:var(--accent)" onclick="adminAction('ban','')">🚫 Ban</button>
+        <button class="btn" style="color:var(--success);border-color:rgba(16,185,129,0.3)" data-admin-action="user-action" data-action="upgrade" data-plan="pro"><span class="admin-tab-icon" data-icon="arrowUp" aria-hidden="true"></span> Set Pro</button>
+        <button class="btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)" data-admin-action="user-action" data-action="upgrade" data-plan="premium"><span class="admin-tab-icon" data-icon="crown" aria-hidden="true"></span> Set Premium</button>
+        <button class="btn" data-admin-action="user-action" data-action="downgrade" data-plan="free"><span class="admin-tab-icon" data-icon="arrowDown" aria-hidden="true"></span> Set Free</button>
+        <button class="btn" data-admin-action="user-action" data-action="reset_count" data-plan="free"><span class="admin-tab-icon" data-icon="refresh" aria-hidden="true"></span> Reset Count</button>
+        <button class="btn" data-admin-action="user-action" data-action="grant_bonus" data-plan="free" style="color:var(--info)">+10 Bonus</button>
+        <button class="btn" style="color:var(--accent)" data-admin-action="user-action" data-action="ban" data-plan="free"><span class="admin-tab-icon" data-icon="lock" aria-hidden="true"></span> Ban</button>
       </div>
       <div class="modal-grid">
         <div class="modal-field"><div class="modal-label">Plan</div><div class="modal-value badge badge-neutral" id="pmType">FREE</div></div>
@@ -376,20 +459,21 @@
 
   <div class="modal-overlay" id="broadcastModal">
     <div class="modal-card glass-panel">
-      <button class="modal-close" onclick="hideModal('broadcastModal')">×</button>
+      <button class="modal-close" data-admin-action="hide-modal" data-modal-id="broadcastModal">&times;</button>
       <div class="modal-header">
-        <div class="modal-header-icon" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)">📢</div>
+        <div class="modal-header-icon" style="color:#3b82f6;border-color:rgba(59,130,246,0.3)"><span data-icon="megaphone" aria-hidden="true"></span></div>
         <div><div class="modal-title">Telegram Broadcast</div><div class="modal-subtitle">Mass message to all bot subscribers</div></div>
       </div>
       <textarea id="broadcastMessage" class="input-control" placeholder="Type your broadcast... Markdown *bold* and _italic_ supported." style="margin-bottom:16px;"></textarea>
-      <button id="sendBroadcastBtn" class="btn btn-primary" style="width:100%;justify-content:center;" onclick="sendBroadcast()">Dispatch Broadcast</button>
+      <button id="sendBroadcastBtn" class="btn btn-primary" style="width:100%;justify-content:center;" data-admin-action="send-broadcast">Dispatch Broadcast</button>
     </div>
   </div>
 
   <div id="toast"></div>
 
+  <script src="/nexa-icons.js?v=1"></script>
   <script src="/admin-engine.js?v=8"></script>
   <script src="/admin-tabs.js?v=1"></script>
+  <script src="/admin-content.js?v=1"></script>
 </body>
 </html>
-

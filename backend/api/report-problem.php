@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-session_start();
+nexa_start_session();
 $userEmail = $_SESSION['user_email'] ?? 'guest';
 $deviceId = $_SERVER['HTTP_X_DEVICE_ID'] ?? ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
 
@@ -63,4 +63,3 @@ try {
     echo json_encode(['error' => 'Failed to save report']);
 }
 exit;
-

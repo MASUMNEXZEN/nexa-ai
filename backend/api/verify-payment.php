@@ -4,173 +4,114 @@
  */
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/payment.php';
 require_once __DIR__ . '/db.php';
 
 nexa_apply_security_headers('POST, OPTIONS');
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+nexa_start_session();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed.']);
-    exit;
+    nexa_reject_json(405, 'Method not allowed.');
 }
-
 if (empty($_SESSION['user_email'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Not authenticated']);
-    exit;
+    nexa_reject_json(401, 'Not authenticated');
+}
+if (RAZORPAY_KEY_SECRET === '') {
+    nexa_reject_json(503, 'Payment gateway not configured');
 }
 
-$body = json_decode(file_get_contents('php://input'), true);
-if (!is_array($body)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid request body']);
-    exit;
-}
-
+$body = nexa_read_json_body(65536);
 $userEmail = strtolower(trim((string)$_SESSION['user_email']));
-$paymentId = trim((string)($body['razorpay_payment_id'] ?? ''));
-$orderId   = trim((string)($body['razorpay_order_id'] ?? ''));
-$signature = trim((string)($body['razorpay_signature'] ?? ''));
-$requestedPlan = trim((string)($body['plan_name'] ?? ''));
+$paymentId = isset($body['razorpay_payment_id']) && is_string($body['razorpay_payment_id'])
+    ? trim($body['razorpay_payment_id']) : '';
+$orderId = isset($body['razorpay_order_id']) && is_string($body['razorpay_order_id'])
+    ? trim($body['razorpay_order_id']) : '';
+$signature = isset($body['razorpay_signature']) && is_string($body['razorpay_signature'])
+    ? trim($body['razorpay_signature']) : '';
+$requestedPlan = isset($body['plan_name']) && is_string($body['plan_name'])
+    ? trim($body['plan_name']) : '';
 
-if ($paymentId === '' || $orderId === '' || $signature === '') {
-    http_response_code(400);
-    echo json_encode(['error' => 'Missing payment fields']);
-    exit;
+if (!nexa_payment_provider_field_is_valid($paymentId)
+    || !nexa_payment_provider_field_is_valid($orderId)
+    || !nexa_payment_signature_is_valid($signature)) {
+    nexa_reject_json(400, 'Missing or invalid payment fields');
 }
 
 $db = get_db();
 if (!$db) {
-    http_response_code(503);
-    echo json_encode(['error' => 'Payment service unavailable']);
-    exit;
+    nexa_reject_json(503, 'Payment service unavailable');
 }
 
 $paymentStmt = $db->prepare(
-    "SELECT * FROM payments WHERE razorpay_order_id = ? LIMIT 1"
+    "SELECT id, user_email, razorpay_payment_id, razorpay_order_id,
+            idempotency_key, amount_paise, plan_name, status, created_at
+     FROM payments WHERE razorpay_order_id = ? LIMIT 1"
 );
 $paymentStmt->execute([$orderId]);
 $payment = $paymentStmt->fetch();
-
 if (!$payment) {
-    http_response_code(404);
-    echo json_encode(['error' => 'Payment order not found']);
-    exit;
+    nexa_reject_json(404, 'Payment order not found');
 }
-
-if (strtolower((string)$payment['user_email']) !== $userEmail) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Payment order does not belong to this account']);
-    exit;
+if (!nexa_payment_owner_matches($payment, $userEmail)) {
+    nexa_reject_json(403, 'Payment order does not belong to this account');
 }
 
 $planName = (string)$payment['plan_name'];
 if ($requestedPlan !== '' && $requestedPlan !== $planName) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Payment plan does not match the server order']);
-    exit;
+    nexa_reject_json(409, 'Payment plan does not match the server order');
 }
 
-$planStmt = $db->prepare("SELECT * FROM subscription_plans WHERE name = ? LIMIT 1");
+$planStmt = $db->prepare(
+    "SELECT name, display_name, price_paise, daily_limit, features, razorpay_plan_id
+     FROM subscription_plans WHERE name = ? LIMIT 1"
+);
 $planStmt->execute([$planName]);
 $plan = $planStmt->fetch();
-
 if (!$plan) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Payment plan is no longer configured']);
-    exit;
+    nexa_reject_json(409, 'Payment plan is no longer configured');
+}
+if (!nexa_payment_plan_matches($payment, $plan)) {
+    nexa_reject_json(409, 'Payment amount does not match the server plan');
 }
 
-if ((int)$payment['amount_paise'] !== (int)$plan['price_paise']) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Payment amount does not match the server plan']);
-    exit;
-}
-
-$expectedSignature = hash_hmac(
-    'sha256',
-    $orderId . '|' . $paymentId,
-    RAZORPAY_KEY_SECRET
-);
-
+$expectedSignature = nexa_payment_signature($orderId, $paymentId, RAZORPAY_KEY_SECRET);
 if (!hash_equals($expectedSignature, $signature)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Payment signature mismatch']);
-    exit;
+    nexa_reject_json(400, 'Payment signature mismatch');
+}
+
+$replayStmt = $db->prepare(
+    "SELECT id, razorpay_order_id, user_email, status
+     FROM payments WHERE razorpay_payment_id = ? LIMIT 1"
+);
+$replayStmt->execute([$paymentId]);
+$replay = $replayStmt->fetch();
+if (nexa_payment_replay_conflict($replay ?: null, (int)$payment['id'])) {
+    nexa_reject_json(409, 'Payment has already been used');
 }
 
 if ((string)$payment['status'] === 'success') {
     if ((string)$payment['razorpay_payment_id'] !== $paymentId) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Payment order has already been used']);
-        exit;
+        nexa_reject_json(409, 'Payment order has already been used');
     }
-
     echo json_encode([
         'success' => true,
         'plan' => $planName,
         'plan_display' => $plan['display_name'],
         'daily_limit' => (int)$plan['daily_limit'],
         'message' => 'Payment already verified.',
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
-
 if ((string)$payment['status'] !== 'pending') {
-    http_response_code(409);
-    echo json_encode(['error' => 'Payment order is not pending']);
-    exit;
+    nexa_reject_json(409, 'Payment order is not pending');
 }
 
 $endDate = date('Y-m-d H:i:s', strtotime('+30 days'));
-
 try {
-    $db->beginTransaction();
-
-    $updatePayment = $db->prepare(
-        "UPDATE payments
-         SET razorpay_payment_id = ?, status = 'success'
-         WHERE razorpay_order_id = ? AND user_email = ? AND status = 'pending'"
-    );
-    $updatePayment->execute([$paymentId, $orderId, $userEmail]);
-
-    if ($updatePayment->rowCount() !== 1) {
-        throw new RuntimeException('Payment order was already processed');
-    }
-
-    $db->prepare(
-        "UPDATE user_subscriptions
-         SET status = 'cancelled'
-         WHERE user_email = ? AND status = 'active'"
-    )->execute([$userEmail]);
-
-    $db->prepare(
-        "INSERT INTO user_subscriptions
-         (user_email, plan_name, status, razorpay_sub_id, start_date, end_date)
-         VALUES (?, ?, 'active', ?, CURRENT_TIMESTAMP, ?)"
-    )->execute([$userEmail, $planName, $paymentId, $endDate]);
-
-    $newType = $planName === 'premium' ? 'premium' : 'pro';
-    $db->prepare(
-        "UPDATE users SET type = ?, bonus_limit = ? WHERE email = ?"
-    )->execute([$newType, (int)$plan['daily_limit'], $userEmail]);
-
-    $db->prepare(
-        "UPDATE fcm_tokens SET plan_name = ? WHERE user_email = ?"
-    )->execute([$planName, $userEmail]);
-
-    $db->commit();
+    nexa_finalize_payment($db, $payment, $plan, $userEmail, $paymentId, $endDate);
 } catch (Throwable $error) {
-    if ($db->inTransaction()) {
-        $db->rollBack();
-    }
-    error_log('[NexA] Payment verification failed: ' . $error->getMessage());
-    http_response_code(409);
-    echo json_encode(['error' => 'Payment could not be finalized. Please contact support.']);
-    exit;
+    error_log('[NexA] Payment verification failed: ' . get_class($error));
+    nexa_reject_json(409, 'Payment could not be finalized. Please contact support.');
 }
 
 echo json_encode([
@@ -180,4 +121,4 @@ echo json_encode([
     'daily_limit' => (int)$plan['daily_limit'],
     'expires' => $endDate,
     'message' => "Welcome to {$plan['display_name']}! Your plan is now active.",
-]);
+], JSON_UNESCAPED_UNICODE);

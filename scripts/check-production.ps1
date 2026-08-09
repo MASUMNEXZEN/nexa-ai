@@ -16,9 +16,24 @@ foreach ($file in $files) {
 & php -l 'scripts/local-router.php'
 if ($LASTEXITCODE -ne 0) { throw 'PHP lint failed: scripts/local-router.php' }
 
+$migrationFiles = @(Get-ChildItem -Path 'backend/migrations' -Filter '*.php' -Recurse -File)
+foreach ($file in $migrationFiles) {
+    & php -l $file.FullName
+    if ($LASTEXITCODE -ne 0) { throw "PHP lint failed: $($file.FullName)" }
+}
+& php -l 'scripts/migrate.php'
+if ($LASTEXITCODE -ne 0) { throw 'PHP lint failed: scripts/migrate.php' }
+
 $forbiddenNames = $files | Where-Object { $_.Name -match '(^|[-_])(test|diag|debug|trace|live|temp|migrate|wrapper|traced)' }
 if ($forbiddenNames) {
     throw "Forbidden legacy/debug API files found: $($forbiddenNames.Name -join ', ')"
 }
 
+$plannerFiles = @(Get-ChildItem -Path 'backend/planner' -Filter '*.php' -Recurse -File | Sort-Object FullName)
+foreach ($file in $plannerFiles) {
+    & php -l $file.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Planner PHP lint failed: $($file.FullName)"
+    }
+}
 Write-Host "Production PHP syntax checks passed for $($files.Count) API files."

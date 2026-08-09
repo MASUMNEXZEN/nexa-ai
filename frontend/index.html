@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#08090f">
+  <meta name="theme-color" content="#F7F8FC">
 
   <title>NexA AI - WBJEE, JENPAS UG, ANM/GNM Study Tutor</title>
   <meta name="description" content="NexA AI by NexZen Institute. The ultimate AI study tutor for West Bengal students. Ace WBJEE, JENPAS UG, ANM GNM, WBP, KP, SSC, and Board Exams with instant answers and quizzes.">
@@ -16,12 +16,12 @@
 
   <meta property="og:title" content="NexA AI - Free AI Study Tutor for Bengal Students">
   <meta property="og:description" content="Ask anything and get instant AI answers for WBJEE, JENPAS, ANM/GNM, and SSC exams.">
-  <meta property="og:image" content="https://ai.nexzen.live/logo.png?v=2">
+  <meta property="og:image" content="https://ai.nexzen.live/logo.png?v=5">
   <meta property="og:url" content="https://ai.nexzen.live/">
   <meta property="og:type" content="website">
 
-  <link rel="icon" href="/logo-icon.png">
-  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="icon" href="/logo-icon.png?v=5">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=3">
   <link rel="manifest" href="/manifest.json">
 
   <!-- Schema.org Structured Data -->
@@ -44,14 +44,14 @@
   </script>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/fonts.css?v=2">
 
-  <!-- CDN Libraries -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <!-- Self-hosted runtime libraries -->
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="/vendor/highlight/github-dark.min.css">
 
-  <link rel="stylesheet" href="/nexa-main.css?v=43">
+  <link rel="stylesheet" href="/nexa-main.css?v=49">
+  <link rel="stylesheet" href="/nexa-workspace.css?v=9">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
     <div class="splash-orb splash-orb-1"></div>
     <div class="splash-orb splash-orb-2"></div>
     <div class="splash-logo">
-      <img src="/logo.png?v=2" alt="NexA AI" onerror="this.src='/icon-512.png'">
+      <img src="/logo.png?v=5" alt="NexA AI">
       <div class="splash-glow"></div>
     </div>
     <div class="splash-brand">NexA <span>AI</span></div>
@@ -90,8 +90,11 @@
     <!-- HEADER -->
     <header class="app-header" id="appHeader">
       <div class="header-left">
+        <button type="button" class="icon-btn sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle study navigation" aria-expanded="true" title="Toggle study navigation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
         <div class="header-logo">
-          <img src="/logo.png?v=2" alt="NexA" onerror="this.src='/icon-512.png'">
+          <img src="/logo-icon.png?v=5" alt="NexA">
         </div>
         <div class="header-titles">
           <h1 class="header-brand">NexA <span>AI</span></h1>
@@ -102,13 +105,13 @@
 
 
       <div class="header-right">
-        <button class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+        <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         </button>
-        <button class="icon-btn" id="newChatBtn" aria-label="New Chat" title="New Chat">
+        <button type="button" class="icon-btn" id="newChatBtn" aria-label="New Chat" title="New Chat">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
-        <button class="profile-btn" id="profileBtn" aria-label="Open profile">
+        <button type="button" class="profile-btn" id="profileBtn" aria-label="Open profile">
           <div class="avatar" id="avatarEl">U</div>
         </button>
       </div>
@@ -117,21 +120,185 @@
     <!-- Announcement Banner (populated by JS from admin panel) -->
     <div id="headerAnnouncement"></div>
 
+    <!-- WORKSPACE NAVIGATION -->
+    <div class="workspace-layout">
+      <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Close study navigation"></button>
+      <aside class="workspace-sidebar" aria-label="Study workspace navigation">
+        <div class="workspace-sidebar__brand">
+          <div class="workspace-sidebar__mark"><img src="/logo-icon.png?v=5" alt="NexA AI"></div>
+          <div>
+            <strong>NexA <span>AI</span></strong>
+            <small>Study workspace</small>
+          </div>
+        </div>
+
+        <button class="workspace-new-chat" id="sidebarNewChatBtn" type="button">
+          <span class="workspace-new-chat__icon" data-icon="plus" aria-hidden="true"></span>
+          <span>New conversation</span>
+        </button>
+
+        <nav class="workspace-nav" aria-label="Workspace sections">
+          <div class="workspace-nav__label">Workspace</div>
+          <button class="workspace-nav__item is-active" id="sidebarChatBtn" type="button" aria-current="page">
+            <span class="workspace-nav__icon" data-icon="message" aria-hidden="true"></span>
+            <span>Study chat</span>
+          </button>
+          <button class="workspace-nav__item" id="sidebarPlannerBtn" type="button">
+            <span class="workspace-nav__icon" data-icon="calendar" aria-hidden="true"></span>
+            <span>Study planner</span>
+          </button>          <button class="workspace-nav__item" id="sidebarQuizBtn" type="button">
+            <span class="workspace-nav__icon" data-icon="listChecks" aria-hidden="true"></span>
+            <span>Mock quizzes</span>
+          </button>
+          <button class="workspace-nav__item" id="sidebarSavedBtn" type="button">
+            <span class="workspace-nav__icon" data-icon="bookmark" aria-hidden="true"></span>
+            <span>Saved answers</span>
+          </button>
+        </nav>
+
+        <div class="workspace-history">
+          <div class="workspace-nav__label"><span>Suggested starts</span><span class="workspace-history__count">3</span></div>
+          <button class="workspace-history__item is-current" type="button">English grammar practice</button>
+          <button class="workspace-history__item" type="button">Human anatomy revision</button>
+          <button class="workspace-history__item" type="button">WBJEE mock test plan</button>
+        </div>
+
+        <div class="workspace-sidebar__footer">
+          <div class="workspace-plan-card">
+            <span class="workspace-plan-card__eyebrow">NEXA AI STUDY PLAN</span>
+            <strong>Build your next win.</strong>
+            <span>Ask, practise, and keep your momentum.</span>
+          </div>
+          <button class="workspace-user" id="sidebarProfileBtn" type="button">
+            <span class="workspace-user__avatar" id="sidebarAvatarEl">U</span>
+            <span class="workspace-user__copy"><strong id="sidebarUserName">Guest learner</strong><small>Open profile</small></span>
+            <span class="workspace-user__arrow" data-icon="arrowRight" aria-hidden="true"></span>
+          </button>
+        </div>
+      </aside>
+
     <!-- MAIN CONTENT -->
     <main class="main-content">
 
       <!-- Chat Area -->
       <div class="chat-area" id="chatArea" role="log" aria-live="polite" aria-label="Conversation"></div>
+      <section class="planner-panel hidden" id="plannerPanel" aria-labelledby="plannerPanelTitle">
+        <div class="planner-panel__header">
+          <div>
+            <span class="planner-eyebrow">NEXA AI STUDY PLANNER</span>
+            <h2 id="plannerPanelTitle">Build a study rhythm that fits your week.</h2>
+            <p id="plannerPanelStatus">Your plan is personal, calendar-based, and never asks for an exam date.</p>
+          </div>
+          <button type="button" class="planner-icon-button" id="plannerCloseBtn" aria-label="Close study planner" title="Close study planner">
+            <span data-icon="arrowLeft" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="planner-auth-prompt hidden" id="plannerAuthPrompt" role="alert">
+          <span data-icon="lock" aria-hidden="true"></span>
+          <div><strong>Sign in to use your study planner.</strong><p>Your chat remains available as a guest. Sign in to save preferences, diagnostics, and plans.</p><a href="/login">Sign in</a></div>
+        </div>
+        <div class="planner-card" id="plannerOnboardingCard">
+          <div class="planner-card__heading">
+            <div><span class="planner-step">STEP 1</span><h3>Set your study preferences</h3><p>We will use these preferences to shape your daily, weekly, and monthly plan.</p></div>
+            <span class="planner-card__icon" data-icon="settings" aria-hidden="true"></span>
+          </div>
+          <form id="plannerProfileForm" class="planner-form">
+            <div class="planner-form__grid">
+              <label class="planner-field"><span>Exam</span><select id="plannerExam" required></select></label>
+              <label class="planner-field"><span>Daily study minutes <small>(optional)</small></span><input id="plannerDailyMinutes" type="number" min="0" max="1440" step="15" placeholder="180"></label>
+              <label class="planner-field"><span>Preferred session</span><select id="plannerSessionMinutes"><option value="30">30 minutes</option><option value="50" selected>50 minutes</option><option value="75">75 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></label>
+              <label class="planner-field"><span>Current level</span><select id="plannerCurrentLevel"><option value="beginner">Beginner</option><option value="developing">Developing</option><option value="advanced">Advanced</option></select></label>
+              <label class="planner-field planner-field--wide"><span>Preferred study time <small>(optional)</small></span><input id="plannerTimeBlock" type="text" maxlength="40" placeholder="Example: 7:00 PM – 9:00 PM"></label>
+            </div>
+            <fieldset class="planner-days"><legend>Available days</legend><div class="planner-days__grid">
+              <label><input class="planner-day-checkbox" type="checkbox" data-weekday="1" checked><span>Mon</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="2" checked><span>Tue</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="3" checked><span>Wed</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="4" checked><span>Thu</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="5" checked><span>Fri</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="6" checked><span>Sat</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="0"><span>Sun</span></label>
+            </div></fieldset>
+            <div class="planner-form__footer"><p>Leave daily minutes blank to use the 3-hour self-study baseline.</p><button type="submit" class="planner-primary-button" id="plannerSaveProfileBtn">Save and continue <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+          </form>
+        </div>
+        <div class="planner-card hidden" id="plannerDiagnosticCard">
+          <div class="planner-card__heading"><div><span class="planner-step">STEP 2</span><h3>Complete your diagnostic</h3><p>This gives the planner a starting point for weakness, revision, and subject priorities.</p></div><span class="planner-card__icon" data-icon="target" aria-hidden="true"></span></div>
+          <div id="plannerDiagnosticBody" class="planner-diagnostic-body"><button type="button" class="planner-primary-button" id="plannerStartDiagnosticBtn">Start diagnostic <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+        </div>
+        <div class="planner-card hidden" id="plannerPlanCard">
+          <div class="planner-card__heading">
+            <div><span class="planner-step">YOUR PLAN</span><h3>Make progress you can see.</h3><p id="plannerTodaySummary">Your plan will appear here after the diagnostic.</p></div>
+            <button type="button" class="planner-secondary-button" id="plannerRefreshBtn"><span data-icon="refresh" aria-hidden="true"></span> Refresh month</button>
+          </div>
+          <div class="planner-view-tabs" id="plannerViewTabs" role="tablist" aria-label="Planner views">
+            <button type="button" class="planner-view-tab is-active" data-planner-view="today" role="tab" aria-selected="true"><span data-icon="calendar" aria-hidden="true"></span> Today</button>
+            <button type="button" class="planner-view-tab" data-planner-view="week" role="tab" aria-selected="false"><span data-icon="listChecks" aria-hidden="true"></span> Week</button>
+            <button type="button" class="planner-view-tab" data-planner-view="month" role="tab" aria-selected="false"><span data-icon="calendar" aria-hidden="true"></span> Month</button>
+            <button type="button" class="planner-view-tab" data-planner-view="progress" role="tab" aria-selected="false"><span data-icon="chart" aria-hidden="true"></span> Progress</button>
+          </div>
+          <section class="planner-view-panel" id="plannerTodayView" data-planner-panel="today" role="tabpanel">
+            <div class="planner-view-heading"><div><span class="planner-step">TODAY</span><h4 id="plannerTodayHeading">Your next best study session</h4></div><span class="planner-view-note" id="plannerTodayDate"></span><button type="button" class="planner-secondary-button" id="plannerManualDayBtn"><span data-icon="plus" aria-hidden="true"></span> Plan this day</button></div>
+            <div id="plannerTodayTasks" class="planner-task-list"></div>
+            <div class="planner-question-modal hidden" id="plannerQuestionModal" role="dialog" aria-modal="true" aria-labelledby="plannerQuestionModalTitle">
+          <div class="planner-question-modal__backdrop" data-planner-question-close="true"></div>
+          <div class="planner-question-modal__surface">
+            <div class="planner-question-modal__header"><div><span class="planner-step">PRACTICE QUESTION</span><h3 id="plannerQuestionModalTitle">Check your understanding</h3></div><button type="button" class="planner-icon-button" id="plannerQuestionClose" aria-label="Close question"><span data-icon="close" aria-hidden="true"></span></button></div>
+            <p id="plannerQuestionMeta" class="planner-question-modal__meta"></p>
+            <p id="plannerQuestionPrompt" class="planner-question-modal__prompt"></p>
+            <div id="plannerQuestionOptions" class="planner-question-options"></div>
+            <div id="plannerQuestionFeedback" class="planner-question-feedback" role="status"></div>
+            <div class="planner-question-modal__footer"><button type="button" class="planner-secondary-button" id="plannerQuestionCancel">Close</button><button type="button" class="planner-primary-button" id="plannerQuestionSubmit">Submit answer <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+          </div>
+        </div>      </section>
+          <section class="planner-view-panel hidden" id="plannerWeekView" data-planner-panel="week" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">THIS WEEK</span><h4 id="plannerWeekHeading">Your weekly rhythm</h4><p id="plannerWeekSummary">Choose the subjects you want the planner to emphasize this week.</p></div><button type="button" class="planner-secondary-button" id="plannerManualWeekBtn"><span data-icon="plus" aria-hidden="true"></span> Plan this week</button></div>
+            <div class="planner-week-subjects"><div id="plannerWeekSubjects" class="planner-chip-list"></div><button type="button" class="planner-secondary-button" id="plannerSaveWeekSubjects">Save weekly focus</button></div>
+            <div id="plannerWeekTasks" class="planner-week-task-list"></div>
+          </section>
+          <section class="planner-view-panel hidden" id="plannerMonthView" data-planner-panel="month" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">MONTH</span><h4 id="plannerMonthHeading">Your monthly map</h4><p>Use the calendar to see the shape of your workload before you start.</p></div></div>
+            <div id="plannerMonthGrid" class="planner-month-grid"></div>
+          </section>
+          <section class="planner-view-panel hidden" id="plannerProgressView" data-planner-panel="progress" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">PROGRESS</span><h4>What your answers are teaching us</h4><p>Accuracy and revision timing are updated as you study.</p></div></div>
+            <div id="plannerProgressList" class="planner-progress-list"></div>
+          </section>
+        </div>
+      </section>
 
       <!-- -- BOTTOM WRAP (sticky to visible viewport bottom) -- -->
+      <div class="planner-manual-modal hidden" id="plannerManualModal" role="dialog" aria-modal="true" aria-labelledby="plannerManualModalTitle">
+        <div class="planner-manual-modal__backdrop" data-planner-manual-close="true"></div>
+        <div class="planner-manual-modal__surface">
+          <div class="planner-manual-modal__header">
+            <div><span class="planner-step">MANUAL PLANNING</span><h3 id="plannerManualModalTitle">Plan a study day</h3><p id="plannerManualModalDescription">Choose the exact session you want to complete today or on another generated study date.</p></div>
+            <button type="button" class="planner-icon-button" id="plannerManualClose" aria-label="Close manual planner" title="Close manual planner"><span data-icon="close" aria-hidden="true"></span></button>
+          </div>
+          <div class="planner-manual-mode-tabs" role="tablist" aria-label="Manual planning range">
+            <button type="button" class="planner-manual-mode-tab is-active" data-manual-scope="day" role="tab" aria-selected="true">Plan a day</button>
+            <button type="button" class="planner-manual-mode-tab" data-manual-scope="week" role="tab" aria-selected="false">Plan a week</button>
+          </div>
+          <form id="plannerManualForm">
+            <div id="plannerManualDayFields" class="planner-manual-grid">
+              <label class="planner-manual-field"><span>Date</span><input id="plannerManualDayDate" type="date" required></label>
+              <label class="planner-manual-field"><span>Subject</span><select id="plannerManualDaySubject" required></select></label>
+              <label class="planner-manual-field"><span>Syllabus topic <small>(optional)</small></span><select id="plannerManualDayTopic"></select></label>
+              <label class="planner-manual-field"><span>Session type</span><select id="plannerManualDayTaskType"></select></label>
+              <label class="planner-manual-field"><span>Minutes</span><input id="plannerManualDayMinutes" type="number" min="30" max="1440" step="5" required></label>
+              <label class="planner-manual-field planner-manual-field--wide"><span>Session title <small>(optional)</small></span><input id="plannerManualDayTitle" type="text" maxlength="120" placeholder="Example: Revise cell division"></label>
+            </div>
+            <div id="plannerManualWeekFields" class="hidden">
+              <label class="planner-manual-field planner-manual-week-start"><span>Week of <small>(Monday)</small></span><input id="plannerManualWeekStart" type="date" required></label>
+              <div id="plannerManualWeekRows" class="planner-manual-week-rows"></div>
+              <button type="button" class="planner-secondary-button planner-manual-add-row" id="plannerManualAddRow"><span data-icon="plus" aria-hidden="true"></span> Add another session</button>
+            </div>
+            <div class="planner-manual-modal__footer"><button type="button" class="planner-secondary-button" id="plannerManualCancel">Cancel</button><button type="submit" class="planner-primary-button" id="plannerManualSubmit"><span data-icon="check" aria-hidden="true"></span> Save manual plan</button></div>
+          </form>
+        </div>
+      </div>
       <div class="input-footer-wrap">
 
         <!-- Prominent Sticky Mock Quiz Banner -->
         <div class="prominent-quiz-banner">
-          <button class="prominent-quiz-btn" id="quizPillBtn" title="Start Official Mock Quiz">
-            <span class="pq-icon" id="pqIcon">QUIZ</span>
-            <span class="pq-text" id="pqText">Free ANM/GNM Mock Quiz</span>
-            <span class="pq-arrow">-&gt;</span>
+          <button type="button" class="prominent-quiz-btn" id="quizPillBtn" title="Start Official Mock Quiz">
+            <span class="pq-icon" id="pqIcon" data-icon="listChecks" aria-hidden="true"></span>
+            <span class="pq-text" id="pqText">Start a mock quiz</span>
+            <span class="pq-arrow" data-icon="arrowRight" aria-hidden="true"></span>
           </button>
         </div>
 
@@ -139,7 +306,7 @@
         <div class="input-island" id="inputIsland">
 
           <!-- Image Preview Strip -->
-          <div class="image-preview-strip" id="imagePreview" style="display:none"></div>
+          <div class="image-preview-strip hidden" id="imagePreview"></div>
 
           <!-- Text Row -->
           <div class="input-row">
@@ -162,23 +329,23 @@
               <label class="icon-btn attach-btn" for="imgInput" title="Attach image" aria-label="Attach image">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </label>
-              <input type="file" id="imgInput" accept="image/*,application/pdf" style="display:none" multiple>
+              <input type="file" id="imgInput" class="sr-file-input" accept="image/*,application/pdf" multiple>
 
               <!-- Voice -->
-              <button class="icon-btn voice-btn" id="voiceBtn" aria-label="Voice input" title="Voice input">
+              <button type="button" class="icon-btn voice-btn" id="voiceBtn" aria-label="Voice input" title="Voice input">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               </button>
 
               <!-- Generic Quiz Mode -->
-              <button class="icon-btn quiz-trigger-btn" id="quizBtn" aria-label="Custom Quiz" title="Create a quiz on any topic">QZ</button>
+              <button type="button" class="icon-btn quiz-trigger-btn" id="quizBtn" aria-label="Custom Quiz" title="Create a quiz on any topic"><span data-icon="listChecks" aria-hidden="true"></span></button>
 
               <!-- Send (visible when not streaming) -->
-              <button class="send-btn" id="sendBtn" aria-label="Send message" title="Send">
+              <button type="button" class="send-btn" id="sendBtn" aria-label="Send message" title="Send">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
 
               <!-- Stop Generating (visible ONLY when streaming, replaces send) -->
-              <button class="stop-inline-btn hidden" id="stopGeneratingBtn" aria-label="Stop generating" title="Stop">
+              <button type="button" class="stop-inline-btn hidden" id="stopGeneratingBtn" aria-label="Stop generating" title="Stop">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>
               </button>
             </div>
@@ -188,15 +355,16 @@
       </div><!-- end input-footer-wrap -->
 
     </main>
+    </div>
 
     <!-- SCROLL TO BOTTOM FAB -->
-    <button class="scroll-fab hidden" id="scrollFab" aria-label="Scroll to bottom">
+    <button type="button" class="scroll-fab hidden" id="scrollFab" aria-label="Scroll to bottom">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
 
     <!-- PROFILE DRAWER -->
-    <div class="profile-drawer-overlay hidden" id="drawerOverlay"></div>
-    <aside class="profile-drawer hidden" id="profileDrawer" aria-label="Profile panel">
+    <div class="profile-drawer-overlay hidden" id="drawerOverlay" aria-hidden="true"></div>
+    <aside class="profile-drawer hidden" id="profileDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerName" aria-hidden="true" tabindex="-1">
       <div class="drawer-header">
         <div class="drawer-avatar" id="drawerAvatarEl">U</div>
         <div class="drawer-info">
@@ -204,14 +372,17 @@
           <div class="drawer-email" id="drawerEmail"></div>
           <div class="drawer-type-badge" id="drawerTypeBadge">Free</div>
         </div>
-        <button class="icon-btn drawer-close-btn" id="drawerCloseBtn" aria-label="Close profile">
+        <button type="button" class="icon-btn drawer-close-btn" id="drawerCloseBtn" aria-label="Close profile">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <!-- Streak Banner -->
       <div class="streak-banner" id="streakBanner">
-        <span class="streak-fire">STREAK</span>
-        <span id="streakCount">0</span>-day streak
+        <span class="streak-fire" data-icon="zap" aria-hidden="true"></span>
+        <span class="streak-copy">
+          <strong>Study streak</strong>
+          <span><span id="streakCount">0</span> days</span>
+        </span>
         <span class="streak-best" id="streakBest"></span>
       </div>
 
@@ -230,16 +401,16 @@
           <div class="drawer-section-title">Your Referral Code</div>
           <div class="ref-row">
             <code class="ref-code" id="refCodeDisplay">NX-????</code>
-            <button class="ref-copy-btn" id="refCopyBtn" title="Copy referral code">Copy</button>
+            <button type="button" class="ref-copy-btn" id="refCopyBtn" title="Copy referral code">Copy</button>
           </div>
           <div class="ref-hint">Share this to earn bonus questions!</div>
         </div>
 
         <!-- Saved Bookmarks -->
         <div class="drawer-section" id="bookmarksSection">
-          <div class="drawer-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="drawer-section-title drawer-section-title--actions">
             <span>My Bookmarks</span>
-            <button class="ref-copy-btn" id="clearBookmarksBtn" style="font-size:11px;padding:4px 10px;">Clear All</button>
+            <button type="button" class="ref-copy-btn ref-copy-btn--compact" id="clearBookmarksBtn">Clear All</button>
           </div>
           <div id="bookmarksList"><div class="bookmark-empty">No saved answers yet. Tap the bookmark icon on any NexA reply to save it.</div></div>
         </div>
@@ -255,27 +426,27 @@
                 <span class="toggle-slider"></span>
               </div>
             </label>
-            <button class="setting-row setting-btn" id="leaderboardBtn">
+            <button type="button" class="setting-row setting-btn" id="leaderboardBtn">
               <span>Top Scorers Leaderboard</span>
-              <span class="setting-icon">-&gt;</span>
+              <span class="setting-icon" data-icon="arrowRight" aria-hidden="true"></span>
             </button>
-            <button class="setting-row setting-btn" id="clearCacheBtn">
+            <button type="button" class="setting-row setting-btn" id="clearCacheBtn">
               <span>Clear Cache</span>
-              <span class="setting-icon">CLEAR</span>
+              <span class="setting-icon" data-icon="trash" aria-hidden="true"></span>
             </button>
-            <button class="setting-row setting-btn" onclick="if(window.changeExam) window.changeExam()">
+            <button type="button" class="setting-row setting-btn" id="changeExamDrawerBtn">
               <span>Change Target Exam</span>
-              <span class="setting-icon">-&gt;</span>
+              <span class="setting-icon" data-icon="arrowRight" aria-hidden="true"></span>
             </button>
-            <button class="setting-row setting-btn" id="reportProblemBtn">
+            <button type="button" class="setting-row setting-btn" id="reportProblemBtn">
               <span>Report a Problem</span>
-              <span class="setting-icon">REPORT</span>
+              <span class="setting-icon" data-icon="flag" aria-hidden="true"></span>
             </button>
           </div>
         </div>
 
         <!-- Admin Link (visible only if admin) -->
-        <div class="drawer-section" id="adminSection" style="display:none">
+        <div class="drawer-section hidden" id="adminSection">
           <a href="/admin" class="admin-link-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Admin Dashboard
@@ -284,7 +455,7 @@
       </div>
 
       <div class="drawer-footer">
-        <button class="logout-btn" id="drawerLogoutBtn">
+        <button type="button" class="logout-btn" id="drawerLogoutBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Sign Out
         </button>
@@ -292,83 +463,83 @@
     </aside>
 
     <!-- QUIZ MODAL -->
-    <div class="modal-overlay hidden" id="quizOverlay"></div>
-    <div class="quiz-setup-card hidden" id="quizSetupCard">
+    <div class="modal-overlay hidden" id="quizOverlay" aria-hidden="true"></div>
+    <div class="quiz-setup-card hidden" id="quizSetupCard" role="dialog" aria-modal="true" aria-labelledby="quizSetupTitle" aria-hidden="true" tabindex="-1">
       <div class="quiz-setup-header">
-        <h2>Quiz Mode</h2>
-        <button class="icon-btn" id="quizCloseBtn" aria-label="Close quiz">
+        <h2 id="quizSetupTitle">Quiz Mode</h2>
+        <button type="button" class="icon-btn" id="quizCloseBtn" aria-label="Close quiz">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="quiz-setup-body">
         <div class="quiz-field">
-          <label>Topic</label>
+          <label for="quizTopicInput">Topic</label>
           <input type="text" id="quizTopicInput" placeholder="e.g. Cell Biology, Wave Optics, Indian History..." autocomplete="off">
         </div>
         <div class="quiz-field">
-          <label>Number of Questions</label>
-          <div class="quiz-count-row">
-            <button class="quiz-count-btn" data-val="5">5</button>
-            <button class="quiz-count-btn quiz-count-btn--active" data-val="10">10</button>
-            <button class="quiz-count-btn" data-val="15">15</button>
-            <button class="quiz-count-btn" data-val="20">20</button>
+          <label id="quizCountLabel">Number of Questions</label>
+          <div class="quiz-count-row" role="group" aria-labelledby="quizCountLabel">
+            <button type="button" class="quiz-count-btn" data-val="5" aria-pressed="false">5</button>
+            <button type="button" class="quiz-count-btn quiz-count-btn--active" data-val="10" aria-pressed="true">10</button>
+            <button type="button" class="quiz-count-btn" data-val="15" aria-pressed="false">15</button>
+            <button type="button" class="quiz-count-btn" data-val="20" aria-pressed="false">20</button>
           </div>
         </div>
         <div class="quiz-field">
-          <label>Difficulty</label>
-          <div class="quiz-diff-row">
-            <button class="quiz-diff-btn" data-val="easy">Easy</button>
-            <button class="quiz-diff-btn quiz-diff-btn--active" data-val="medium">Medium</button>
-            <button class="quiz-diff-btn" data-val="hard">Hard</button>
+          <label id="quizDifficultyLabel">Difficulty</label>
+          <div class="quiz-diff-row" role="group" aria-labelledby="quizDifficultyLabel">
+            <button type="button" class="quiz-diff-btn" data-val="easy" aria-pressed="false">Easy</button>
+            <button type="button" class="quiz-diff-btn quiz-diff-btn--active" data-val="medium" aria-pressed="true">Medium</button>
+            <button type="button" class="quiz-diff-btn" data-val="hard" aria-pressed="false">Hard</button>
           </div>
         </div>
       </div>
-      <button class="start-quiz-btn" id="startQuizBtn">Generate Quiz</button>
+      <button type="button" class="start-quiz-btn" id="startQuizBtn">Generate Quiz</button>
     </div>
 
     <!-- REPORT PROBLEM MODAL -->
-    <div class="modal-overlay hidden" id="reportOverlay"></div>
-    <div class="report-card hidden" id="reportCard">
+    <div class="modal-overlay hidden" id="reportOverlay" aria-hidden="true"></div>
+    <div class="report-card hidden" id="reportCard" role="dialog" aria-modal="true" aria-labelledby="reportTitle" aria-hidden="true" tabindex="-1">
       <div class="quiz-setup-header">
-        <h2>Report a Problem ??</h2>
-        <button class="icon-btn" id="reportCloseBtn" aria-label="Close report">
+        <h2 id="reportTitle">Report a Problem</h2>
+        <button type="button" class="icon-btn" id="reportCloseBtn" aria-label="Close report">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="quiz-setup-body">
         <div class="quiz-field">
-          <label>Describe the issue</label>
+          <label for="reportText">Describe the issue</label>
           <textarea id="reportText" rows="4" placeholder="What went wrong? Please be specific..."></textarea>
         </div>
       </div>
-      <button class="start-quiz-btn" id="submitReportBtn">Submit Report</button>
+      <button type="button" class="start-quiz-btn" id="submitReportBtn">Submit Report</button>
     </div>
 
     <!-- Hidden utility elements required by app.js -->
-    <div style="display:none" aria-hidden="true">
+    <div class="hidden-utility" aria-hidden="true">
       <div id="refCodeDisplay_hidden"></div>
       <input type="file" id="pdfInput" accept="application/pdf">
     </div>
 
   </div><!-- /.app -->
 
-  <!-- CDN Scripts (loaded before app.js) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- Self-hosted runtime libraries (loaded before app.js) -->
+  <script src="/nexa-icons.js?v=1"></script>
+<script src="/planner/api/planner-client.js?v=1"></script>
+  <script src="/vendor/marked/marked.min.js"></script>
+  <script src="/vendor/dompurify/purify.min.js"></script>
+  <script src="/vendor/katex/katex.min.js"></script>
+  <script src="/vendor/katex/auto-render.min.js"></script>
+  <script src="/vendor/highlight/highlight.min.js"></script>
 
   <!-- App Logic -->
-  <script src="/nexa-app.js?v=46"></script>
+  <script src="/nexa-app.js?v=52"></script>
+<script src="/planner/views/planner-workspace.js?v=1"></script>
 
   <!-- Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
-  </script>
+>
 
+  <script src="/register-sw.js?v=1"></script>
 </body>
 </html>
 
