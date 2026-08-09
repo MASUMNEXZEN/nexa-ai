@@ -8,6 +8,7 @@ NexA AI is a PHP + SQLite AI tutor for exam preparation. The browser client is a
 - `backend/api/` contains the explicitly public PHP controllers.
 - `backend/data/` contains writable SQLite databases and local runtime logs. It must remain outside source control and outside the public web root.
 - `backend/migrations/` is reserved for versioned database changes.
+- `backend/planner/` is the portable planner module; NexA-specific authentication, PDO, routing, and workspace behavior stay at the edges.
 - `scripts/` contains local development and verification commands.
 - `.quarantine/` contains recoverable legacy code that is not part of the application or release.
 
@@ -56,6 +57,7 @@ Before release:
 - Register the production Google OAuth JavaScript origin and redirect configuration.
 - Run `php scripts/migrate.php` on the host before serving traffic. It creates a private SQLite backup before applying pending changes.
 - Run the release verifier and post-deploy smoke checks.
+- Import only owner-verified English syllabus and question content through the admin preview/publish workflow; the planner will refuse incomplete or non-English records.
 
 ## Security rules
 
@@ -70,5 +72,7 @@ Before release:
 - [Product requirements](PRD.md)
 - [Technical requirements](TRD.md)
 - [Master product document](NEXZEN_AI_MASTER_DOC.md)
+- [Student app PRD](NEXA_AI_APP_PRD.md)
+- [Student app TRD](NEXA_AI_APP_TRD.md)
 - [Latest audit report](AUDIT_REPORT.md)
 - [AI agent instructions](AGENTS.md)

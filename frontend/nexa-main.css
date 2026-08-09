@@ -20,7 +20,7 @@
   --text2:      #AEB6CA;
   --text3:      #707A95;
   --sans:       'Outfit', system-ui, sans-serif;
-  --sans-bn:    'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+  --sans-bn:    'Hind Siliguri', 'Noto Sans Bengali', 'Nirmala UI', 'Shonar Bangla', 'Kalpurush', 'Vrinda', system-ui, sans-serif;
   --mono:       'JetBrains Mono', 'Fira Code', monospace;
   --radius:     18px;
   --radius-sm:  10px;
@@ -1228,4 +1228,35 @@ body {
     padding-top: max(12px, env(safe-area-inset-top));
     height: calc(var(--header-h) + env(safe-area-inset-top));
   }
+}
+
+/* NexA self-contained icon system */
+.nexa-icon{width:1em;height:1em;display:inline-block;flex:0 0 auto;vertical-align:-0.14em;stroke:currentColor}
+.nexa-icon-slot,[data-icon]{display:inline-flex;align-items:center;justify-content:center}
+.reaction-bar .nexa-icon{width:15px;height:15px}
+.quiz-score-badge{display:inline-flex;align-items:center;justify-content:center;gap:8px;color:var(--primary-strong);font-size:15px;font-weight:700;margin-bottom:8px}
+
+/* Bengali output surfaces */
+.ai-text,
+.ai-text p,
+.ai-text li,
+.ai-text td,
+.msg .bubble > span,
+.quiz-question,
+.quiz-option,
+.quiz-explanation-box,
+.expl-text,
+.question-input {
+  font-family: var(--sans-bn);
+}
+.ai-text { line-height: 1.85; }
+.quiz-question { line-height: 1.65; }
+.quiz-option { line-height: 1.6; }
+.question-input { line-height: 1.65; }
+
+/* Bengali form surfaces */
+.quiz-field input,
+.quiz-field textarea {
+  font-family: var(--sans-bn);
+  line-height: 1.65;
 }

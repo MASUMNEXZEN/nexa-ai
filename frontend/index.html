@@ -44,14 +44,14 @@
   </script>
 
   <!-- Fonts -->
-  <link rel="stylesheet" href="/vendor/fonts.css">
+  <link rel="stylesheet" href="/vendor/fonts.css?v=2">
 
   <!-- Self-hosted runtime libraries -->
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="/vendor/highlight/github-dark.min.css">
 
-  <link rel="stylesheet" href="/nexa-main.css?v=47">
-  <link rel="stylesheet" href="/nexa-workspace.css?v=8">
+  <link rel="stylesheet" href="/nexa-main.css?v=49">
+  <link rel="stylesheet" href="/nexa-workspace.css?v=9">
 </head>
 <body>
 
@@ -133,22 +133,25 @@
         </div>
 
         <button class="workspace-new-chat" id="sidebarNewChatBtn" type="button">
-          <span class="workspace-new-chat__icon" aria-hidden="true">+</span>
+          <span class="workspace-new-chat__icon" data-icon="plus" aria-hidden="true"></span>
           <span>New conversation</span>
         </button>
 
         <nav class="workspace-nav" aria-label="Workspace sections">
           <div class="workspace-nav__label">Workspace</div>
           <button class="workspace-nav__item is-active" id="sidebarChatBtn" type="button" aria-current="page">
-            <span class="workspace-nav__icon" aria-hidden="true">CHAT</span>
+            <span class="workspace-nav__icon" data-icon="message" aria-hidden="true"></span>
             <span>Study chat</span>
           </button>
-          <button class="workspace-nav__item" id="sidebarQuizBtn" type="button">
-            <span class="workspace-nav__icon" aria-hidden="true">QUIZ</span>
+          <button class="workspace-nav__item" id="sidebarPlannerBtn" type="button">
+            <span class="workspace-nav__icon" data-icon="calendar" aria-hidden="true"></span>
+            <span>Study planner</span>
+          </button>          <button class="workspace-nav__item" id="sidebarQuizBtn" type="button">
+            <span class="workspace-nav__icon" data-icon="listChecks" aria-hidden="true"></span>
             <span>Mock quizzes</span>
           </button>
           <button class="workspace-nav__item" id="sidebarSavedBtn" type="button">
-            <span class="workspace-nav__icon" aria-hidden="true">SAVE</span>
+            <span class="workspace-nav__icon" data-icon="bookmark" aria-hidden="true"></span>
             <span>Saved answers</span>
           </button>
         </nav>
@@ -169,7 +172,7 @@
           <button class="workspace-user" id="sidebarProfileBtn" type="button">
             <span class="workspace-user__avatar" id="sidebarAvatarEl">U</span>
             <span class="workspace-user__copy"><strong id="sidebarUserName">Guest learner</strong><small>Open profile</small></span>
-            <span class="workspace-user__arrow" aria-hidden="true">&rarr;</span>
+            <span class="workspace-user__arrow" data-icon="arrowRight" aria-hidden="true"></span>
           </button>
         </div>
       </aside>
@@ -179,16 +182,123 @@
 
       <!-- Chat Area -->
       <div class="chat-area" id="chatArea" role="log" aria-live="polite" aria-label="Conversation"></div>
+      <section class="planner-panel hidden" id="plannerPanel" aria-labelledby="plannerPanelTitle">
+        <div class="planner-panel__header">
+          <div>
+            <span class="planner-eyebrow">NEXA AI STUDY PLANNER</span>
+            <h2 id="plannerPanelTitle">Build a study rhythm that fits your week.</h2>
+            <p id="plannerPanelStatus">Your plan is personal, calendar-based, and never asks for an exam date.</p>
+          </div>
+          <button type="button" class="planner-icon-button" id="plannerCloseBtn" aria-label="Close study planner" title="Close study planner">
+            <span data-icon="arrowLeft" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="planner-auth-prompt hidden" id="plannerAuthPrompt" role="alert">
+          <span data-icon="lock" aria-hidden="true"></span>
+          <div><strong>Sign in to use your study planner.</strong><p>Your chat remains available as a guest. Sign in to save preferences, diagnostics, and plans.</p><a href="/login">Sign in</a></div>
+        </div>
+        <div class="planner-card" id="plannerOnboardingCard">
+          <div class="planner-card__heading">
+            <div><span class="planner-step">STEP 1</span><h3>Set your study preferences</h3><p>We will use these preferences to shape your daily, weekly, and monthly plan.</p></div>
+            <span class="planner-card__icon" data-icon="settings" aria-hidden="true"></span>
+          </div>
+          <form id="plannerProfileForm" class="planner-form">
+            <div class="planner-form__grid">
+              <label class="planner-field"><span>Exam</span><select id="plannerExam" required></select></label>
+              <label class="planner-field"><span>Daily study minutes <small>(optional)</small></span><input id="plannerDailyMinutes" type="number" min="0" max="1440" step="15" placeholder="180"></label>
+              <label class="planner-field"><span>Preferred session</span><select id="plannerSessionMinutes"><option value="30">30 minutes</option><option value="50" selected>50 minutes</option><option value="75">75 minutes</option><option value="90">90 minutes</option><option value="120">120 minutes</option></select></label>
+              <label class="planner-field"><span>Current level</span><select id="plannerCurrentLevel"><option value="beginner">Beginner</option><option value="developing">Developing</option><option value="advanced">Advanced</option></select></label>
+              <label class="planner-field planner-field--wide"><span>Preferred study time <small>(optional)</small></span><input id="plannerTimeBlock" type="text" maxlength="40" placeholder="Example: 7:00 PM – 9:00 PM"></label>
+            </div>
+            <fieldset class="planner-days"><legend>Available days</legend><div class="planner-days__grid">
+              <label><input class="planner-day-checkbox" type="checkbox" data-weekday="1" checked><span>Mon</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="2" checked><span>Tue</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="3" checked><span>Wed</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="4" checked><span>Thu</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="5" checked><span>Fri</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="6" checked><span>Sat</span></label><label><input class="planner-day-checkbox" type="checkbox" data-weekday="0"><span>Sun</span></label>
+            </div></fieldset>
+            <div class="planner-form__footer"><p>Leave daily minutes blank to use the 3-hour self-study baseline.</p><button type="submit" class="planner-primary-button" id="plannerSaveProfileBtn">Save and continue <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+          </form>
+        </div>
+        <div class="planner-card hidden" id="plannerDiagnosticCard">
+          <div class="planner-card__heading"><div><span class="planner-step">STEP 2</span><h3>Complete your diagnostic</h3><p>This gives the planner a starting point for weakness, revision, and subject priorities.</p></div><span class="planner-card__icon" data-icon="target" aria-hidden="true"></span></div>
+          <div id="plannerDiagnosticBody" class="planner-diagnostic-body"><button type="button" class="planner-primary-button" id="plannerStartDiagnosticBtn">Start diagnostic <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+        </div>
+        <div class="planner-card hidden" id="plannerPlanCard">
+          <div class="planner-card__heading">
+            <div><span class="planner-step">YOUR PLAN</span><h3>Make progress you can see.</h3><p id="plannerTodaySummary">Your plan will appear here after the diagnostic.</p></div>
+            <button type="button" class="planner-secondary-button" id="plannerRefreshBtn"><span data-icon="refresh" aria-hidden="true"></span> Refresh month</button>
+          </div>
+          <div class="planner-view-tabs" id="plannerViewTabs" role="tablist" aria-label="Planner views">
+            <button type="button" class="planner-view-tab is-active" data-planner-view="today" role="tab" aria-selected="true"><span data-icon="calendar" aria-hidden="true"></span> Today</button>
+            <button type="button" class="planner-view-tab" data-planner-view="week" role="tab" aria-selected="false"><span data-icon="listChecks" aria-hidden="true"></span> Week</button>
+            <button type="button" class="planner-view-tab" data-planner-view="month" role="tab" aria-selected="false"><span data-icon="calendar" aria-hidden="true"></span> Month</button>
+            <button type="button" class="planner-view-tab" data-planner-view="progress" role="tab" aria-selected="false"><span data-icon="chart" aria-hidden="true"></span> Progress</button>
+          </div>
+          <section class="planner-view-panel" id="plannerTodayView" data-planner-panel="today" role="tabpanel">
+            <div class="planner-view-heading"><div><span class="planner-step">TODAY</span><h4 id="plannerTodayHeading">Your next best study session</h4></div><span class="planner-view-note" id="plannerTodayDate"></span><button type="button" class="planner-secondary-button" id="plannerManualDayBtn"><span data-icon="plus" aria-hidden="true"></span> Plan this day</button></div>
+            <div id="plannerTodayTasks" class="planner-task-list"></div>
+            <div class="planner-question-modal hidden" id="plannerQuestionModal" role="dialog" aria-modal="true" aria-labelledby="plannerQuestionModalTitle">
+          <div class="planner-question-modal__backdrop" data-planner-question-close="true"></div>
+          <div class="planner-question-modal__surface">
+            <div class="planner-question-modal__header"><div><span class="planner-step">PRACTICE QUESTION</span><h3 id="plannerQuestionModalTitle">Check your understanding</h3></div><button type="button" class="planner-icon-button" id="plannerQuestionClose" aria-label="Close question"><span data-icon="close" aria-hidden="true"></span></button></div>
+            <p id="plannerQuestionMeta" class="planner-question-modal__meta"></p>
+            <p id="plannerQuestionPrompt" class="planner-question-modal__prompt"></p>
+            <div id="plannerQuestionOptions" class="planner-question-options"></div>
+            <div id="plannerQuestionFeedback" class="planner-question-feedback" role="status"></div>
+            <div class="planner-question-modal__footer"><button type="button" class="planner-secondary-button" id="plannerQuestionCancel">Close</button><button type="button" class="planner-primary-button" id="plannerQuestionSubmit">Submit answer <span data-icon="arrowRight" aria-hidden="true"></span></button></div>
+          </div>
+        </div>      </section>
+          <section class="planner-view-panel hidden" id="plannerWeekView" data-planner-panel="week" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">THIS WEEK</span><h4 id="plannerWeekHeading">Your weekly rhythm</h4><p id="plannerWeekSummary">Choose the subjects you want the planner to emphasize this week.</p></div><button type="button" class="planner-secondary-button" id="plannerManualWeekBtn"><span data-icon="plus" aria-hidden="true"></span> Plan this week</button></div>
+            <div class="planner-week-subjects"><div id="plannerWeekSubjects" class="planner-chip-list"></div><button type="button" class="planner-secondary-button" id="plannerSaveWeekSubjects">Save weekly focus</button></div>
+            <div id="plannerWeekTasks" class="planner-week-task-list"></div>
+          </section>
+          <section class="planner-view-panel hidden" id="plannerMonthView" data-planner-panel="month" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">MONTH</span><h4 id="plannerMonthHeading">Your monthly map</h4><p>Use the calendar to see the shape of your workload before you start.</p></div></div>
+            <div id="plannerMonthGrid" class="planner-month-grid"></div>
+          </section>
+          <section class="planner-view-panel hidden" id="plannerProgressView" data-planner-panel="progress" role="tabpanel" aria-hidden="true">
+            <div class="planner-view-heading"><div><span class="planner-step">PROGRESS</span><h4>What your answers are teaching us</h4><p>Accuracy and revision timing are updated as you study.</p></div></div>
+            <div id="plannerProgressList" class="planner-progress-list"></div>
+          </section>
+        </div>
+      </section>
 
       <!-- -- BOTTOM WRAP (sticky to visible viewport bottom) -- -->
+      <div class="planner-manual-modal hidden" id="plannerManualModal" role="dialog" aria-modal="true" aria-labelledby="plannerManualModalTitle">
+        <div class="planner-manual-modal__backdrop" data-planner-manual-close="true"></div>
+        <div class="planner-manual-modal__surface">
+          <div class="planner-manual-modal__header">
+            <div><span class="planner-step">MANUAL PLANNING</span><h3 id="plannerManualModalTitle">Plan a study day</h3><p id="plannerManualModalDescription">Choose the exact session you want to complete today or on another generated study date.</p></div>
+            <button type="button" class="planner-icon-button" id="plannerManualClose" aria-label="Close manual planner" title="Close manual planner"><span data-icon="close" aria-hidden="true"></span></button>
+          </div>
+          <div class="planner-manual-mode-tabs" role="tablist" aria-label="Manual planning range">
+            <button type="button" class="planner-manual-mode-tab is-active" data-manual-scope="day" role="tab" aria-selected="true">Plan a day</button>
+            <button type="button" class="planner-manual-mode-tab" data-manual-scope="week" role="tab" aria-selected="false">Plan a week</button>
+          </div>
+          <form id="plannerManualForm">
+            <div id="plannerManualDayFields" class="planner-manual-grid">
+              <label class="planner-manual-field"><span>Date</span><input id="plannerManualDayDate" type="date" required></label>
+              <label class="planner-manual-field"><span>Subject</span><select id="plannerManualDaySubject" required></select></label>
+              <label class="planner-manual-field"><span>Syllabus topic <small>(optional)</small></span><select id="plannerManualDayTopic"></select></label>
+              <label class="planner-manual-field"><span>Session type</span><select id="plannerManualDayTaskType"></select></label>
+              <label class="planner-manual-field"><span>Minutes</span><input id="plannerManualDayMinutes" type="number" min="30" max="1440" step="5" required></label>
+              <label class="planner-manual-field planner-manual-field--wide"><span>Session title <small>(optional)</small></span><input id="plannerManualDayTitle" type="text" maxlength="120" placeholder="Example: Revise cell division"></label>
+            </div>
+            <div id="plannerManualWeekFields" class="hidden">
+              <label class="planner-manual-field planner-manual-week-start"><span>Week of <small>(Monday)</small></span><input id="plannerManualWeekStart" type="date" required></label>
+              <div id="plannerManualWeekRows" class="planner-manual-week-rows"></div>
+              <button type="button" class="planner-secondary-button planner-manual-add-row" id="plannerManualAddRow"><span data-icon="plus" aria-hidden="true"></span> Add another session</button>
+            </div>
+            <div class="planner-manual-modal__footer"><button type="button" class="planner-secondary-button" id="plannerManualCancel">Cancel</button><button type="submit" class="planner-primary-button" id="plannerManualSubmit"><span data-icon="check" aria-hidden="true"></span> Save manual plan</button></div>
+          </form>
+        </div>
+      </div>
       <div class="input-footer-wrap">
 
         <!-- Prominent Sticky Mock Quiz Banner -->
         <div class="prominent-quiz-banner">
           <button type="button" class="prominent-quiz-btn" id="quizPillBtn" title="Start Official Mock Quiz">
-            <span class="pq-icon" id="pqIcon">QUIZ</span>
+            <span class="pq-icon" id="pqIcon" data-icon="listChecks" aria-hidden="true"></span>
             <span class="pq-text" id="pqText">Start a mock quiz</span>
-            <span class="pq-arrow">-&gt;</span>
+            <span class="pq-arrow" data-icon="arrowRight" aria-hidden="true"></span>
           </button>
         </div>
 
@@ -227,7 +337,7 @@
               </button>
 
               <!-- Generic Quiz Mode -->
-              <button type="button" class="icon-btn quiz-trigger-btn" id="quizBtn" aria-label="Custom Quiz" title="Create a quiz on any topic">QZ</button>
+              <button type="button" class="icon-btn quiz-trigger-btn" id="quizBtn" aria-label="Custom Quiz" title="Create a quiz on any topic"><span data-icon="listChecks" aria-hidden="true"></span></button>
 
               <!-- Send (visible when not streaming) -->
               <button type="button" class="send-btn" id="sendBtn" aria-label="Send message" title="Send">
@@ -268,8 +378,11 @@
       </div>
       <!-- Streak Banner -->
       <div class="streak-banner" id="streakBanner">
-        <span class="streak-fire">STREAK</span>
-        <span id="streakCount">0</span>-day streak
+        <span class="streak-fire" data-icon="zap" aria-hidden="true"></span>
+        <span class="streak-copy">
+          <strong>Study streak</strong>
+          <span><span id="streakCount">0</span> days</span>
+        </span>
         <span class="streak-best" id="streakBest"></span>
       </div>
 
@@ -315,19 +428,19 @@
             </label>
             <button type="button" class="setting-row setting-btn" id="leaderboardBtn">
               <span>Top Scorers Leaderboard</span>
-              <span class="setting-icon">-&gt;</span>
+              <span class="setting-icon" data-icon="arrowRight" aria-hidden="true"></span>
             </button>
             <button type="button" class="setting-row setting-btn" id="clearCacheBtn">
               <span>Clear Cache</span>
-              <span class="setting-icon">CLEAR</span>
+              <span class="setting-icon" data-icon="trash" aria-hidden="true"></span>
             </button>
             <button type="button" class="setting-row setting-btn" id="changeExamDrawerBtn">
               <span>Change Target Exam</span>
-              <span class="setting-icon">-&gt;</span>
+              <span class="setting-icon" data-icon="arrowRight" aria-hidden="true"></span>
             </button>
             <button type="button" class="setting-row setting-btn" id="reportProblemBtn">
               <span>Report a Problem</span>
-              <span class="setting-icon">REPORT</span>
+              <span class="setting-icon" data-icon="flag" aria-hidden="true"></span>
             </button>
           </div>
         </div>
@@ -411,6 +524,8 @@
   </div><!-- /.app -->
 
   <!-- Self-hosted runtime libraries (loaded before app.js) -->
+  <script src="/nexa-icons.js?v=1"></script>
+<script src="/planner/api/planner-client.js?v=1"></script>
   <script src="/vendor/marked/marked.min.js"></script>
   <script src="/vendor/dompurify/purify.min.js"></script>
   <script src="/vendor/katex/katex.min.js"></script>
@@ -418,7 +533,8 @@
   <script src="/vendor/highlight/highlight.min.js"></script>
 
   <!-- App Logic -->
-  <script src="/nexa-app.js?v=50"></script>
+  <script src="/nexa-app.js?v=52"></script>
+<script src="/planner/views/planner-workspace.js?v=1"></script>
 
   <!-- Service Worker -->
 >

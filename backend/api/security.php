@@ -223,6 +223,35 @@ function nexa_csrf_token(): string
     return $_SESSION['csrf_token'];
 }
 
+function nexa_require_authenticated_user(PDO $db): array
+{
+    nexa_start_session();
+    $email = strtolower(trim((string)($_SESSION['user_email'] ?? '')));
+
+    if ($email === '' && !empty($_COOKIE['nexa_token'])) {
+        $resolved = nexa_resolve_persistent_token($db, (string)$_COOKIE['nexa_token']);
+        if ($resolved) {
+            $email = strtolower(trim((string)$resolved['email']));
+            $_SESSION['user_email'] = $email;
+        }
+    }
+
+    if ($email === '') {
+        nexa_safe_error(401, 'authentication_required', 'Please sign in to use the study planner.');
+    }
+
+    $statement = $db->prepare(
+        'SELECT id, email, name, type
+         FROM users WHERE lower(email) = lower(?) LIMIT 1'
+    );
+    $statement->execute([$email]);
+    $user = $statement->fetch();
+    if (!$user) {
+        nexa_safe_error(401, 'authentication_required', 'Please sign in to use the study planner.');
+    }
+
+    return $user;
+}
 function nexa_require_admin(): void
 {
     nexa_start_session();

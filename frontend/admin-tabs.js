@@ -12,6 +12,7 @@ function switchTab(tab) {
     plans:         loadPlans,
     users:         () => {}, // users loaded by admin-engine.js on init
     appconfig:     loadAppConfig,
+    content:       () => {},
     push:          () => {},
     telegram:      loadTelegram,
   };
@@ -371,7 +372,7 @@ async function saveAppConfig() {
   };
   try {
     const res = await apiFetch('/api/admin-config.php', 'POST', { updates });
-    showToast('✅ Config saved! App will update on next launch.', 'success');
+    showToast('Config saved! App will update on next launch.', 'success');
   } catch(e) { showToast('Error saving config', 'error'); }
 }
 
@@ -393,10 +394,10 @@ async function sendPush() {
   el('pushResult').textContent = 'Sending...';
   try {
     const res = await apiFetch('/api/push-broadcast.php', 'POST', { title, body, target, email });
-    el('pushResult').textContent = `✅ ${res.message}`;
+    el('pushResult').textContent = res.message;
     showToast(res.message, 'success');
   } catch(e) {
-    el('pushResult').textContent = '❌ Failed to send. Check Firebase config.';
+    el('pushResult').textContent = 'Failed to send. Check Firebase config.';
     showToast('Push failed', 'error');
   }
 }

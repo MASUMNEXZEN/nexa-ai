@@ -34,7 +34,9 @@ API_FILES = [
     "admin-announcement.php", "admin-subscriptions.php", "admin-clear-cache.php",
     "admin-export-csv.php", "admin-export-telegram-csv.php", "admin-export-usage.php",
     "admin-reports.php", "admin-telegram-broadcast.php", "admin-telegram-users.php",
-    "push-broadcast.php",
+    "push-broadcast.php", "admin-content-preview.php", "admin-content-publish.php",
+    "planner-profile.php", "planner-month.php", "planner-week.php", "planner-day.php",
+    "planner-assessment.php", "planner-question.php", "planner-progress.php", "planner-task.php",
 ]
 
 BLOCKED_PARTS = {".env", "fcm-key.json", "gemini_raw_dump.txt", "trace.txt"}
@@ -60,7 +62,11 @@ def release_files() -> list[tuple[Path, str]]:
 
     migration_runner = BASE_LOCAL / "scripts" / "migrate.php"
     files.append((migration_runner, "scripts/migrate.php"))
-    return release_files()
+    planner_root = BASE_LOCAL / "backend" / "planner"
+    for path in sorted(planner_root.rglob("*.php")):
+        if path.is_file():
+            files.append((path, path.relative_to(BASE_LOCAL).as_posix()))
+    return files
 
 
 def validate() -> list[tuple[Path, str]]:

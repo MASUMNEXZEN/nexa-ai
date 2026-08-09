@@ -20,7 +20,7 @@ ErrorDocument 500 /500.html
     RewriteEngine On
 
     # Public API URLs are served by the backend without exposing its folder.
-    RewriteRule ^api/(app-ask|ask|quiz-api|leaderboard|app-config|auth-check|auth-login|auth-register|auth-verify-otp|auth-logout|auth-profile|auth-google|auth-forgot-password|auth-reset-password|report-problem|sync-history|subscription-plans|subscribe|verify-payment|save-fcm-token|telegram-webhook|ping|admin-login|admin-check|admin-logout|admin-stats|admin-config|admin-limit|admin-announcement|admin-subscriptions|admin-clear-cache|admin-export-csv|admin-export-telegram-csv|admin-export-usage|admin-reports|admin-telegram-broadcast|admin-telegram-users|push-broadcast)\.php$ backend/api/$1.php [END,NC]
+    RewriteRule ^api/(app-ask|ask|quiz-api|leaderboard|app-config|auth-check|auth-login|auth-register|auth-verify-otp|auth-logout|auth-profile|auth-google|auth-forgot-password|auth-reset-password|report-problem|sync-history|subscription-plans|subscribe|verify-payment|save-fcm-token|telegram-webhook|ping|admin-login|admin-check|admin-logout|admin-stats|admin-config|admin-limit|admin-announcement|admin-subscriptions|admin-clear-cache|admin-export-csv|admin-export-telegram-csv|admin-export-usage|admin-reports|admin-telegram-broadcast|admin-telegram-users|push-broadcast|admin-content-preview|admin-content-publish|planner-profile|planner-month|planner-week|planner-day|planner-assessment|planner-question|planner-progress|planner-task|planner-manual)\.php$ backend/api/$1.php [END,NC]
     RewriteRule ^api/ - [R=404,END,NC]
 
     # Public application routes are served by the frontend without changing URLs.

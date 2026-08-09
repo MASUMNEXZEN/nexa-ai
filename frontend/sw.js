@@ -1,18 +1,19 @@
 // Strict versioned cache, network-first for API, emergency clear supported
 
-const CACHE = 'nexa-v34';
+const CACHE = 'nexa-v36';
 const STATIC = [
   './',
   './index.html',
   './manifest.json',
-  './nexa-main.css?v=47',
-  './nexa-app.js?v=50',
+  './nexa-icons.js?v=1',
+  './nexa-main.css?v=49',
+  './nexa-app.js?v=52',
   '/logo.png?v=5',
   '/logo-icon.png?v=5',
-  '/nexa-workspace.css?v=8',
+  '/nexa-workspace.css?v=9',
   '/icon-192.png',
   '/icon-512.png',
-  './vendor/fonts.css',
+  './vendor/fonts.css?v=2',
   './vendor/katex/katex.min.css',
   './vendor/katex/katex.min.js',
   './vendor/katex/auto-render.min.js',

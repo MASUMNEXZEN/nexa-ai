@@ -50,7 +50,7 @@ define('NEXA_RESPONSE_CACHE_VERSION', '2026-08-08-fresh-chat-v1');
 define('NEXA_QUIZ_CACHE_ENABLED', getenv('NEXA_QUIZ_CACHE') === '1');
 define('NEXA_QUIZ_CACHE_VERSION', '2026-08-08-quality-v1');
 // Request handlers require these versions to be applied by the protected CLI runner.
-define('NEXA_MAIN_SCHEMA_VERSION', 4);
+define('NEXA_MAIN_SCHEMA_VERSION', 7);
 define('NEXA_CACHE_SCHEMA_VERSION', 3);
 /** Clear the unavailable local sandbox proxy for outbound AI calls only. */
 function nexa_configure_curl($handle) {

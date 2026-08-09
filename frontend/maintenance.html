@@ -14,7 +14,7 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;bac
 h1{font-size:28px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#7A78F5,#86A8FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .subtitle{font-size:15px;color:#9a8fb8;margin-bottom:32px;line-height:1.5}
 .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 24px;backdrop-filter:blur(20px)}
-.icon{font-size:48px;margin-bottom:16px;display:block}
+.icon{margin-bottom:16px;display:flex;justify-content:center}.icon .nexa-icon{width:48px;height:48px}
 .status{font-size:16px;font-weight:600;margin-bottom:8px}
 .detail{font-size:13px;color:#8a7fa8;line-height:1.6}
 .progress-bar{width:100%;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:20px;overflow:hidden}
@@ -34,12 +34,13 @@ h1{font-size:28px;font-weight:700;margin-bottom:8px;background:linear-gradient(1
   <h1>NexA AI</h1>
   <p class="subtitle">Built by NexZen Institute</p>
   <div class="card">
-    <span class="icon">🔧</span>
+    <span class="icon"><span data-icon="wrench" aria-hidden="true"></span></span>
     <div class="status">Under Maintenance</div>
     <p class="detail">We're upgrading NexA AI to serve you better.<br>This won't take long — please check back shortly!</p>
     <div class="progress-bar"><div class="progress-fill"></div></div>
   </div>
   <p class="footer">© 2026 NexZen Institute, Kolkata</p>
 </div>
+  <script src="/nexa-icons.js?v=1"></script>
 </body>
 </html>

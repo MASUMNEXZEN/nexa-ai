@@ -52,7 +52,7 @@
 
   <link rel="icon" href="/logo-icon.png?v=5">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link rel="stylesheet" href="/vendor/fonts.css">
+  <link rel="stylesheet" href="/vendor/fonts.css?v=2">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -437,7 +437,15 @@
       .right-panel { background: #F7F8FC; border-left: 0; }
       .form-box { padding: 28px 22px; }
     }
-  </style>
+  /* Bengali account fields */
+:root {
+  --sans-bn: 'Hind Siliguri', 'Noto Sans Bengali', 'Nirmala UI', 'Shonar Bangla', 'Kalpurush', 'Vrinda', system-ui, sans-serif;
+}
+.field input,
+textarea {
+  font-family: var(--sans-bn);
+}
+</style>
 </head>
 <body>
   <div class="bg-canvas">
@@ -472,19 +480,19 @@
 
       <div class="feature-list">
         <div class="feature-item">
-          <div class="feature-icon">🧠</div>
+          <div class="feature-icon"><span data-icon="brain" aria-hidden="true"></span></div>
           <span>Built by NexZen Institute</span>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">&#128483;&#65039;</div>
+          <div class="feature-icon"><span data-icon="mic" aria-hidden="true"></span></div>
           <span>Voice input in Bengali &amp; English</span>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">⚡</div>
+          <div class="feature-icon"><span data-icon="zap" aria-hidden="true"></span></div>
           <span>Real-time streaming answers</span>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">🔒</div>
+          <div class="feature-icon"><span data-icon="lock" aria-hidden="true"></span></div>
           <span>Secure with Google or Email login</span>
         </div>
       </div>
@@ -688,6 +696,7 @@
   </div>
 
 
+  <script src="/nexa-icons.js?v=1"></script>
   <script src="/login.js?v=1"></script>
 </body>
 </html>

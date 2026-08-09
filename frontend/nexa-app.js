@@ -16,6 +16,7 @@ const show= (id)           => { const e = el(id); if (e) e.classList.remove('hid
 const hide= (id)           => { const e = el(id); if (e) e.classList.add('hidden'); };
 const tog = (id, on)       => { const e = el(id); if (e) e.classList.toggle('hidden', !on); };
 const attr= (id, a, v)     => { const e = el(id); if (e) e.setAttribute(a, v); };
+const uiIcon = (name, label, className) => window.NexaIcons?.svg(name, label, className) || "";
 
 /* Accessible surface state: one active drawer/dialog, predictable focus return. */
 const surfaceState = { id: null, returnTo: null, close: null, bodyOverflow: '' };
@@ -179,6 +180,7 @@ async function guestBoot() {
 }
 
 async function authBoot() {
+  const isFresh = state.urlParams.get('fresh') === '1';
   applySavedTheme();
   try {
     const res  = await fetch('/api/auth-check.php', { credentials: 'include' });
@@ -196,6 +198,7 @@ async function authBoot() {
       bonus_limit:  data.bonus_limit || 0,
     };
     state.todayCount = data.today_count || 0;
+    window.NexaPlanner?.setCsrfToken(data.csrf_token || '');
     state.dailyLimit = (data.limit || 60) + (data.bonus_limit || 0);
 
     hideSplash();
@@ -313,7 +316,7 @@ async function fetchAnnouncement() {
     if (d.active && d.text) {
       const center = el('headerAnnouncement');
       if (center) {
-        center.innerHTML = `<div class="announcement-banner">📢 ${escHtml(d.text)}</div>`;
+        center.innerHTML = `<div class="announcement-banner">${uiIcon("megaphone")}<span>${escHtml(d.text)}</span></div>`;
       }
     }
   } catch{}
@@ -540,7 +543,7 @@ function copyRefCode() {
   if (!code || code === 'NX-????') return;
   navigator.clipboard.writeText(code).then(() => {
     const btn = el('refCopyBtn');
-    if (btn) { btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = 'Copy', 2000); }
+    if (btn) { btn.innerHTML = uiIcon('check') + '<span>Copied</span>'; setTimeout(() => { btn.innerHTML = uiIcon('copy') + '<span>Copy</span>'; }, 2000); }
   });
 }
 
@@ -876,7 +879,7 @@ async function sendMessage() {
     if (e.name === 'AbortError') {
       appendAIBubble('_Generation stopped by you._', true);
     } else {
-      appendAIBubble('⚠️ Sorry, NexA had trouble connecting. Please check your internet and try again.', true);
+      appendAIBubble('Sorry, NexA had trouble connecting. Please check your internet and try again.', true);
     }
     console.error('[NexA] Stream error:', e);
   } finally {
@@ -916,20 +919,20 @@ You are now a dedicated quiz master. Ask EXACTLY ONE MCQ at a time. Label option
     greetingEnhancer = ` IMPORTANT: The user has just greeted you. Warmly introduce yourself in Bengali as NexA — the AI tutor of NexZen Institute. Tell them you can help with WBJEE, JENPAS UG, ANM/GNM, WBP, SSC, WBCS, and Board Exams. Ask which exam they are preparing for.`;
   }
 
-  let systemText = `You are NexA, AI tutor. ${langPolicy} Sign off: "— NexA 🎓"${greetingEnhancer}`;
+  let systemText = `You are NexA, AI tutor. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}`;
 
   if (ex.includes('ANM') || ex.includes('GNM') || ex.includes('JENPAS') || ex.includes('NEET')) {
-    systemText = `You are NexA, Medical/Nursing tutor exclusively for ${ex} syllabus. Focus strictly on ${ex} topics: Anatomy, Physiology, Microbiology, Nutrition, Community Health, Pharmacology, and related nursing sciences. ${langPolicy} Sign off: "— NexA 🩺"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, Medical/Nursing tutor exclusively for ${ex} syllabus. Focus strictly on ${ex} topics: Anatomy, Physiology, Microbiology, Nutrition, Community Health, Pharmacology, and related nursing sciences. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else if (ex.includes('WBJEE')) {
-    systemText = `You are NexA, Engineering tutor for WBJEE syllabus. Focus strictly on WBJEE topics: Mathematics (Algebra, Calculus, Coordinate Geometry), Physics (Mechanics, Optics, Electrodynamics), Chemistry (Physical, Organic, Inorganic). ${langPolicy} Sign off: "— NexA ⚙️"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, Engineering tutor for WBJEE syllabus. Focus strictly on WBJEE topics: Mathematics (Algebra, Calculus, Coordinate Geometry), Physics (Mechanics, Optics, Electrodynamics), Chemistry (Physical, Organic, Inorganic). ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else if (ex.includes('WBP') || ex.includes('KP')) {
-    systemText = `You are NexA, Police Exam tutor for WBP/KP syllabus. Focus on GK, Indian Polity, History, Geography, Arithmetic, and Reasoning. ${langPolicy} Sign off: "— NexA 👮"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, Police Exam tutor for WBP/KP syllabus. Focus on GK, Indian Polity, History, Geography, Arithmetic, and Reasoning. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else if (ex.includes('WBCS') || ex.includes('RRB') || ex.includes('SSC')) {
-    systemText = `You are NexA, Govt Exam tutor for ${ex} syllabus. Focus on topics relevant to ${ex}: General Studies, Reasoning, English, Quantitative Aptitude, Current Affairs. ${langPolicy} Sign off: "— NexA 🏛️"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, Govt Exam tutor for ${ex} syllabus. Focus on topics relevant to ${ex}: General Studies, Reasoning, English, Quantitative Aptitude, Current Affairs. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else if (ex.includes('Madhyamik') || ex.includes('HS') || ex.includes('Class')) {
-    systemText = `You are NexA, WB Board tutor for WBBSE/WBCHSE syllabus. Help with Madhyamik/HS subjects strictly as per West Bengal board curriculum. ${langPolicy} Sign off: "— NexA 📚"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, WB Board tutor for WBBSE/WBCHSE syllabus. Help with Madhyamik/HS subjects strictly as per West Bengal board curriculum. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else if (ex) {
-    systemText = `You are NexA, tutor for ${ex}. Focus on topics relevant to ${ex} syllabus. ${langPolicy} Sign off: "— NexA 🎓"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
+    systemText = `You are NexA, tutor for ${ex}. Focus on topics relevant to ${ex} syllabus. ${langPolicy} Sign off: "— NexA"${greetingEnhancer}${quizInstruction ? '\n' + quizInstruction : ''}`;
   } else {
     if (quizInstruction) systemText += '\n' + quizInstruction;
     if (greetingEnhancer) systemText += greetingEnhancer;
@@ -1064,7 +1067,7 @@ function createStreamBubble() {
   row.className = 'msg ai';
   row.innerHTML = `
     <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
-    <div class="bubble"><div class="ai-text"></div></div>`;
+    <div class="bubble"><div class="ai-text" lang="bn"></div></div>`;
   area.appendChild(row);
   return { bubble: row.querySelector('.bubble'), textEl: row.querySelector('.ai-text') };
 }
@@ -1073,6 +1076,7 @@ function appendUserBubble(text, files) {
   const area = el('chatArea');
   if (!area) return;
   const initial = state.user?.name ? state.user.name.charAt(0).toUpperCase() : 'U';
+  const lang = contentLanguage(text);
   const row = document.createElement('div');
   row.className = 'msg user';
   let imgs = '';
@@ -1081,7 +1085,7 @@ function appendUserBubble(text, files) {
   }
   row.innerHTML = `
     <div class="msg-avatar">${escHtml(initial)}</div>
-    <div class="bubble">${imgs}${text ? `<span>${escHtml(text)}</span>` : ''}</div>`;
+    <div class="bubble" lang="${lang}">${imgs}${text ? `<span>${escHtml(text)}</span>` : ''}</div>`;
   area.appendChild(row);
   scrollToBottom();
 }
@@ -1091,11 +1095,12 @@ function appendAIBubble(text, withReaction = true) {
   if (!area) return;
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const lang = contentLanguage(text);
   const row = document.createElement('div');
   row.className = 'msg ai';
   row.innerHTML = `
     <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
-    <div class="bubble"><div class="ai-text">${renderMarkdown(text)}</div><span class="chat-timestamp">${timeStr}</span></div>`;
+    <div class="bubble" lang="${lang}"><div class="ai-text" lang="${lang}">${renderMarkdown(text)}</div><span class="chat-timestamp">${timeStr}</span></div>`;
   area.appendChild(row);
   const bubble = row.querySelector('.bubble');
   const textEl = row.querySelector('.ai-text');
@@ -1131,22 +1136,31 @@ function addReactionBar(bubble, text) {
   const bar = document.createElement('div');
   bar.className = 'reaction-bar';
   bar.innerHTML = `
-    <button title="Copy" data-action="copy-answer">📋 Copy</button>`;
+    <button title="Copy" data-action="copy-answer">${uiIcon("copy")}<span>Copy</span></button>`;
   bubble.appendChild(bar);
 }
 
 window.copyText = async (btn, text) => {
-  try { await navigator.clipboard.writeText(text); btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = '📋 Copy', 2000); } catch{}
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.innerHTML = uiIcon("check") + '<span>Copied</span>';
+    setTimeout(() => { btn.innerHTML = uiIcon("copy") + '<span>Copy</span>'; }, 2000);
+  } catch {}
 };
 
 let _tts = null;
 window.speakText = (btn, text) => {
-  if (_tts && !_tts.paused) { speechSynthesis.cancel(); btn.textContent = '🔊 Listen'; _tts = null; return; }
-  _tts = new SpeechSynthesisUtterance(text.replace(/[*_`#>]/g, '').substring(0, 3000));
+  if (_tts && !_tts.paused) {
+    speechSynthesis.cancel();
+    btn.innerHTML = uiIcon("volume") + '<span>Listen</span>';
+    _tts = null;
+    return;
+  }
+  _tts = new SpeechSynthesisUtterance(text.replace(/[*_#>]/g, '').substring(0, 3000));
   _tts.lang = 'en-IN';
-  _tts.onend = () => { btn.textContent = '🔊 Listen'; };
+  _tts.onend = () => { btn.innerHTML = uiIcon("volume") + '<span>Listen</span>'; };
   speechSynthesis.speak(_tts);
-  btn.textContent = '⏹ Stop';
+  btn.innerHTML = uiIcon("square") + '<span>Stop</span>';
 };
 
 /* ── SET SEND STATE ────────────────────────────────────── */
@@ -1182,7 +1196,7 @@ function showLimitBanner() {
   if (!island) return;
   const banner = document.createElement('div');
   banner.className = 'limit-banner';
-  banner.innerHTML = `⚡ Daily limit reached! Share <strong>${escHtml(state.user?.referralCode || '')}</strong> to earn +10 bonus questions. <a href="/login" style="color:var(--accent2)">Upgrade</a>`;
+  banner.innerHTML = `${uiIcon("zap")} Daily limit reached! Share <strong>${escHtml(state.user?.referralCode || '')}</strong> to earn +10 bonus questions. <a href="/login" style="color:var(--accent2)">Upgrade</a>`;
   island.before(banner);
 }
 
@@ -1248,13 +1262,13 @@ async function startQuiz() {
   headerRow.innerHTML = `
     <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
-      <div style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">🧠 ${escHtml(topic)} Quiz</div>
+      <div style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">${uiIcon("brain")} ${escHtml(topic)} Quiz</div>
       <div style="font-size:13px;color:var(--text2)">${state.quizCount} questions · ${diffLabel} · Tap an option to answer</div>
     </div>`;
   area.appendChild(headerRow);
   scrollToBottom();
 
-  if (startBtn) { startBtn.textContent = 'Generate Quiz ✨'; startBtn.disabled = false; }
+  if (startBtn) { startBtn.textContent = 'Generate Quiz'; startBtn.disabled = false; }
 
   await loadNextQuizQuestion();
 }
@@ -1314,7 +1328,7 @@ async function loadNextQuizQuestion() {
 
   } catch(e) {
     removeTypingIndicator(typingId);
-    appendAIBubble(`❌ Error: ${e.message}`);
+    appendAIBubble(`Error: ${e.message}`);
     state.quizActive = false;
   }
 }
@@ -1337,7 +1351,7 @@ function renderQuizCard(q, idx) {
     <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
       <div class="quiz-q-header">Question ${idx + 1} of ${state.quizTotal} · ${String({easy:'Easy',medium:'Medium',hard:'Hard'}[state.quizDiff]||'Medium')}</div>
-      <div class="quiz-question">${escHtml(q.question)}</div>
+      <div class="quiz-question" lang="${contentLanguage(q.question)}">${escHtml(q.question)}</div>
       <div class="quiz-options-wrap">${opts}</div>
       <div class="quiz-explanation-box" style="display:none">
         <div class="expl-text"></div>
@@ -1401,11 +1415,11 @@ window.onQuizAnswer = (btn, ansIdx) => {
     expl.style.display = 'block';
     const et = expl.querySelector('.expl-text');
     const correctLetter = String.fromCharCode(65 + correct);
-    if (et) et.textContent = row?.dataset.expl || (isCorrect ? '✅ Correct!' : `❌ Correct answer: ${correctLetter}`);
+    if (et) et.textContent = row?.dataset.expl || (isCorrect ? 'Correct!' : 'Correct answer: ' + correctLetter);
 
     const nextBtn = document.createElement('button');
     nextBtn.className = 'quiz-next-btn';
-    nextBtn.textContent = state.quizCurrent < state.quizTotal ? 'Next →' : 'See Results 🏆';
+    nextBtn.innerHTML = state.quizCurrent < state.quizTotal ? '<span>Next</span>' + uiIcon('arrowRight') : '<span>See Results</span>' + uiIcon('trophy');
     nextBtn.onclick = () => { nextBtn.remove(); loadNextQuizQuestion(); };
     expl.after(nextBtn);
   }
@@ -1418,7 +1432,7 @@ function renderQuizScore() {
   const area = el('chatArea');
   if (!area) return;
   const pct = Math.round((state.quizScore / state.quizTotal) * 100);
-  const stars = pct >= 80 ? '⭐⭐⭐' : pct >= 50 ? '⭐⭐' : '⭐';
+  const resultIcon = pct >= 80 ? 'trophy' : pct >= 50 ? 'target' : 'bookOpen';
   const msg   = pct >= 80 ? 'Excellent work!' : pct >= 50 ? 'Good effort!' : 'Keep practising!';
   
   // ADAPTIVE: Weak Topic Analysis
@@ -1437,7 +1451,7 @@ function renderQuizScore() {
   if (weakTopics.size > 0 && pct < 100) {
       const topicBtns = Array.from(weakTopics).slice(0, 3).map(t => 
           `<button class="weak-topic-btn" data-action="targeted-quiz" data-topic="${escHtml(t)}">
-             🎯 Practice ${escHtml(t)}
+              ${uiIcon("target")}<span>Practice ${escHtml(t)}</span>
            </button>`
       ).join('');
       
@@ -1456,7 +1470,7 @@ function renderQuizScore() {
     <div class="msg-avatar"><img src="/logo-icon.png?v=4" alt="NexA"></div>
     <div class="bubble">
       <div class="quiz-score-card">
-        <div class="quiz-score-stars">${stars}</div>
+        <div class="quiz-score-badge">${uiIcon(resultIcon)}<span>${pct}%</span></div>
         <div class="quiz-score-big">${state.quizScore}/${state.quizTotal}</div>
         <div class="quiz-score-label">${pct}% — ${msg}</div>
         ${targetedHtml}
@@ -1554,7 +1568,7 @@ function renderQuizCards(bubble, text) {
     </button>`).join('');
 
   textEl.innerHTML = `
-    <div class="quiz-q-header">❓ Quiz Question</div>
+    <div class="quiz-q-header">${uiIcon("listChecks")}<span>Quiz Question</span></div>
     <div class="quiz-question">${renderMarkdown(questionText)}</div>
     <div class="quiz-options-wrap" id="${wrapId}">${optBtns}</div>`;
 }
@@ -1721,7 +1735,7 @@ function updateStreak() {
 
   // Toast if milestone
   if (streak > 1 && lastActive !== today) {
-    setTimeout(() => showToast(`🔥 ${streak}-day streak! Keep it up!`, 'success'), 1500);
+    setTimeout(() => showToast(`${streak}-day streak! Keep it up!`, 'success'), 1500);
   }
 }
 
@@ -1743,7 +1757,7 @@ function saveBookmark(text, btn) {
   if (bookmarks.length > 50) bookmarks.pop(); // max 50 bookmarks
   localStorage.setItem(BOOKMARK_KEY, JSON.stringify(bookmarks));
   renderBookmarks();
-  if (btn) { btn.textContent = '🔖 Saved!'; setTimeout(() => { btn.textContent = '🔖 Save'; }, 2000); }
+  if (btn) { btn.innerHTML = uiIcon('bookmarkCheck') + '<span>Saved</span>'; setTimeout(() => { btn.innerHTML = uiIcon('bookmark') + '<span>Save</span>'; }, 2000); }
   showToast('Answer saved to bookmarks!', 'success');
 }
 
@@ -1765,12 +1779,12 @@ function renderBookmarks() {
   if (!list) return;
   const bookmarks = getBookmarks();
   if (!bookmarks.length) {
-    list.innerHTML = '<div class="bookmark-empty">No saved answers yet. Tap 🔖 on any NexA reply to save it!</div>';
+    list.innerHTML = '<div class="bookmark-empty">No saved answers yet. Tap the bookmark icon on any NexA reply to save it!</div>';
     return;
   }
   list.innerHTML = bookmarks.map(b => `
     <div class="bookmark-item">
-      <button class="bookmark-del" data-action="delete-bookmark" data-id="${b.id}" title="Delete">✕</button>
+      <button class="bookmark-del" data-action="delete-bookmark" data-id="${b.id}" title="Delete">${uiIcon("trash")}</button>
       <div class="bookmark-text">${escHtml(b.text.replace(/[*_#`]/g, ''))}</div>
       <div class="bookmark-time">${escHtml(b.time)}</div>
     </div>`).join('');
@@ -1783,8 +1797,8 @@ function addReactionBar(bubble, text) {
   const bar = document.createElement('div');
   bar.className = 'reaction-bar';
   bar.innerHTML = `
-    <button title="Copy" data-action="copy-answer">📋 Copy</button>
-    <button title="Save to bookmarks" data-action="save-answer">🔖 Save</button>`;
+    <button title="Copy" data-action="copy-answer">${uiIcon("copy")}<span>Copy</span></button>
+    <button title="Save to bookmarks" data-action="save-answer">${uiIcon("bookmark")}<span>Save</span></button>`;
   bubble.appendChild(bar);
 }
 
@@ -1811,7 +1825,7 @@ async function openLeaderboard() {
   modal.setAttribute('tabindex', '-1');
   modal.innerHTML = `
     <div class="leaderboard-header">
-      <h2 id="leaderboardTitle">🏆 Today's Top Scorers</h2>
+      <h2 id="leaderboardTitle">${uiIcon("trophy")}<span>Today's Top Scorers</span></h2>
       <button type="button" class="icon-btn" data-action="close-leaderboard" aria-label="Close leaderboard">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1827,15 +1841,15 @@ async function openLeaderboard() {
     if (!lbList) return;
 
     if (!data.leaders || !data.leaders.length) {
-      lbList.innerHTML = '<div class="lb-empty">No quiz results today yet.<br>Be the first to play! 🎯</div>';
+      lbList.innerHTML = '<div class="lb-empty">No quiz results today yet.<br>Be the first to play!</div>';
       return;
     }
-    const medals = ['🥇','🥈','🥉'];
+    const medals = ['gold', 'silver', 'bronze'];
     lbList.innerHTML = data.leaders.map((u, i) => `
       <div class="lb-row${i < 3 ? ' lb-top' : ''}">
-        <span class="lb-rank">${medals[i] || (i+1)}</span>
+        <span class="lb-rank rank-${i}">${uiIcon("medal")}</span>
         <span class="lb-name">${escHtml(u.name || 'Student')}</span>
-        <span class="lb-score">${u.score}✓</span>
+        <span class="lb-score">${u.score}</span>
       </div>`).join('');
   } catch {
     const lbList = el('lbList');
@@ -1940,3 +1954,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function contentLanguage(value) {
+  return /[\u0980-\u09FF]/u.test(String(value ?? '')) ? 'bn' : 'en';
+}

@@ -44,7 +44,7 @@ function bindAdminActions() {
     if (action === 'refresh') refreshAll();
     else if (action === 'logout') logout();
     else if (action === 'switch-tab') {
-      const allowedTabs = ['dashboard', 'subscriptions', 'plans', 'users', 'appconfig', 'push', 'telegram'];
+      const allowedTabs = ['dashboard', 'subscriptions', 'plans', 'users', 'appconfig', 'content', 'push', 'telegram'];
       if (allowedTabs.includes(trigger.dataset.tab)) switchTab(trigger.dataset.tab);
     } else if (action === 'save-announcement') saveAnnouncement();
     else if (action === 'update-limit') updateLimit();
@@ -372,7 +372,7 @@ async function loadReports() {
     const reps = data.reports || [];
     b.textContent = `${data.total || 0} REPORTS`;
     if (!reps.length) {
-      c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No bug reports! 🎉</div>';
+      c.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">No bug reports yet.</div>';
       return;
     }
     c.innerHTML = reps.map(r => {

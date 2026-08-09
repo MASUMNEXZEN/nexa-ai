@@ -29,4 +29,11 @@ if ($forbiddenNames) {
     throw "Forbidden legacy/debug API files found: $($forbiddenNames.Name -join ', ')"
 }
 
+$plannerFiles = @(Get-ChildItem -Path 'backend/planner' -Filter '*.php' -Recurse -File | Sort-Object FullName)
+foreach ($file in $plannerFiles) {
+    & php -l $file.FullName
+    if ($LASTEXITCODE -ne 0) {
+        throw "Planner PHP lint failed: $($file.FullName)"
+    }
+}
 Write-Host "Production PHP syntax checks passed for $($files.Count) API files."

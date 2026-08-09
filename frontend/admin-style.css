@@ -259,3 +259,25 @@ tr:hover td { background: #F8F8FD; }
 .modal-title, .modal-value, .report-text { color: #1B2430; }
 .modal-grid, .report-item { background: #F8F9FC; border-color: #E6E8F0; }
 #toast { box-shadow: 0 12px 30px rgba(38,43,93,.16); }
+
+/* Admin icon system */
+.admin-tab-icon,.modal-header-icon [data-icon]{display:inline-flex;align-items:center;justify-content:center}
+.admin-tab-icon .nexa-icon,.modal-header-icon .nexa-icon{width:16px;height:16px}
+.modal-header-icon .nexa-icon{width:22px;height:22px}
+
+/* Bengali data typography */
+:where([lang="bn"], [lang="bn"] *, .font-bengali, .font-bengali *) {
+  font-family: var(--font-bengali);
+}
+.topic-query,
+.report-text,
+.modal-value,
+td,
+.input-control {
+  font-family: var(--font-bengali);
+}
+
+/* Bengali admin forms */
+.form-control {
+  font-family: var(--font-bengali);
+}

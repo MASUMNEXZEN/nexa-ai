@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [string]$BaseUrl = 'http://127.0.0.1:8000'
 )
@@ -71,6 +71,10 @@ Assert-SmokeResponse 'unauthenticated payment verification' (Invoke-SmokeRequest
 Assert-SmokeResponse 'unauthorized plan mutation' (Invoke-SmokeRequest '/api/subscription-plans.php' 'POST' '{"name":"pro"}') 403 'Admin access required'
 Assert-SmokeResponse 'invalid AI body' (Invoke-SmokeRequest '/api/app-ask.php' 'POST' '{"contents":[]}') 400 'Invalid conversation payload'
 Assert-SmokeResponse 'unknown API route' (Invoke-SmokeRequest '/api/not-a-real-endpoint.php') 404 'Endpoint not found'
+Assert-SmokeResponse 'unauthenticated planner profile' (Invoke-SmokeRequest '/api/planner-profile.php') 401 'Please sign in'
+Assert-SmokeResponse 'unauthenticated planner question' (Invoke-SmokeRequest '/api/planner-question.php?task_id=1') 401 'Please sign in'
+Assert-SmokeResponse 'unauthenticated planner assessment' (Invoke-SmokeRequest '/api/planner-assessment.php') 401 'Please sign in'
+Assert-SmokeResponse 'unauthenticated planner task' (Invoke-SmokeRequest '/api/planner-task.php' 'POST' '{}') 401 'Please sign in'
 Assert-SmokeResponse 'private backend route' (Invoke-SmokeRequest '/backend/api/db.php') 404 ''
 Assert-SmokeResponse 'private payment helper route' (Invoke-SmokeRequest '/api/payment.php') 404 'Endpoint not found'
 Assert-SmokeResponse 'private migration tool route' (Invoke-SmokeRequest '/scripts/migrate.php') 404 ''

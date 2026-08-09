@@ -1,0 +1,1 @@
+NexA shell, navigation, icon, theme, and authentication adapters.
